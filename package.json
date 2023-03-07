@@ -1,7 +1,7 @@
 {
-  "name": "electron-as-browser",
+  "name": "ethereum-browser",
   "version": "1.0.0",
-  "description": "Make electron like browser easy and flexible.",
+  "description": "Make electron like browser easy and flexible, with added ethereum:// protocol scheme support.",
   "keywords": [
     "electron",
     "browser",
@@ -14,7 +14,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hulufei/electron-as-browser"
+    "url": "https://github.com/nand2/ethereum-browser"
   },
   "files": [
     "index.js",

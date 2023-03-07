@@ -1,8 +1,24 @@
-# electron-as-browser
+# ethereum-browser
+
+Browser with support of the `ethereum://` protocol scheme, forked from the great [electron-as-browser](https://github.com/hulufei/electron-as-browser) from hulufei. Experimental!
+
+`ethereum://<contractAddress>/<contractMethod>?<arg1Name>:<arg1Type>=<argValue>&...`
+
+Example : 
+
+`ethereum://0x4e1f41613c9084fdb9e34e11fae9412427480e56/tokenHTML?tokenId:uint256=4197`
+
+will load the tokenHTML method of the Terraform contract, asking for #4197
+
+![./screenshot2.png](./screenshot2.png)
+
+Since `ethereum://` is supported at the browser level, alls links, XHR fetchs will work.
+
+## Forked from : electron-as-browser
 
 ![version](https://img.shields.io/npm/v/electron-as-browser.svg?style=flat-square)![downloads](https://img.shields.io/npm/dt/electron-as-browser.svg?style=flat-square)![license](https://img.shields.io/npm/l/electron-as-browser.svg?style=flat-square)
 
-A node module to help build	browser like windows in electron.
+A node module to help build browser like windows in electron.
 
 ![./screenshot.png](./screenshot.png)
 

@@ -199,7 +199,12 @@ class BrowserLikeWindow extends EventEmitter {
       log.transports.console.level = 'debug';
     }
 
-    // ethereum:// protocol
+    
+    /**
+     * ethereum:// protocol
+     */
+
+    // Viem client
     const client = createPublicClient({
       chain: mainnet,
       transport: http(this.options.web3Url),
@@ -210,6 +215,10 @@ class BrowserLikeWindow extends EventEmitter {
       let url = new URL(request.url);
 
       let contractAddress = url.hostname;
+      if(contractAddress.endsWith('.eth')) {
+        contractAddress = await client.getEnsAddress({ name: contractAddress });
+      }
+
       let contractMethodName = url.pathname.substring(1);
       
       let contractMethodArgsDef = [];

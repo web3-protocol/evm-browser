@@ -3,7 +3,7 @@ const EventEmitter = require('events');
 const log = require('electron-log');
 
 const { createPublicClient, http } = require('viem');
-const { mainnet } = require('viem/chains');
+const web3Chains = require('viem/chains');
 
 const { fetch } = require("undici");
 global.fetch = fetch;
@@ -206,11 +206,12 @@ class BrowserLikeWindow extends EventEmitter {
 
     // Viem client
     const client = createPublicClient({
-      chain: mainnet,
+      chain: web3Chains[options.web3Chain],
       transport: http(this.options.web3Url),
     });
 
-    protocol.registerBufferProtocol('ethereum', async (request, callback) => {
+    // Register protocol
+    protocol.registerBufferProtocol("ethereum", async (request, callback) => {
 
       let url = new URL(request.url);
 

@@ -2,19 +2,29 @@ const { app } = require('electron');
 const fileUrl = require('file-url');
 const BrowserLikeWindow = require('../index');
 const yargs = require("yargs");
+const web3Chains = require('viem/chains');
 
 let browser;
 
 yargs
   .option('web3-url', {
-    alias: 'u',
+    alias: 'wu',
     type: 'string',
     default: null,
     description: 'URL of a web3 provider (https://eth-mainnet.alchemyapi.io/v2/xxxx, http://127.0.0.1:8545, ...)'
   })
+  .option('web3-chain', {
+    alias: 'wc',
+    type: 'string',
+    default: 'mainnet',
+    description: 'Web3 chain to use (' + Object.keys(web3Chains).join(', ') + ')'
+  })
 let args = yargs.parse()
 
-console.log(args);
+if(web3Chains[args.web3Chain] === undefined) {
+  console.log("Chain " + args.web3Chain + " is invalid");
+  process.exit(1)
+}
 
 function createWindow() {
   browser = new BrowserLikeWindow({
@@ -23,7 +33,8 @@ function createWindow() {
     startPage: 'ethereum://0x4e1f41613c9084fdb9e34e11fae9412427480e56/tokenHTML?tokenId:uint256=4197',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
-    web3Url: args.web3Url
+    web3Url: args.web3Url,
+    web3Chain: args.web3Chain
   });
 
   browser.on('closed', () => {

@@ -1,6 +1,12 @@
-const { BrowserWindow, BrowserView, ipcMain } = require('electron');
+const { BrowserWindow, BrowserView, ipcMain, app, protocol } = require('electron');
 const EventEmitter = require('events');
 const log = require('electron-log');
+
+const { createPublicClient, http } = require('viem');
+const { mainnet } = require('viem/chains');
+
+const { fetch } = require("undici");
+global.fetch = fetch;
 
 log.transports.file.level = false;
 log.transports.console.level = false;
@@ -192,6 +198,54 @@ class BrowserLikeWindow extends EventEmitter {
       this.controlView.webContents.openDevTools({ mode: 'detach' });
       log.transports.console.level = 'debug';
     }
+
+    // ethereum:// protocol
+    const client = createPublicClient({
+      chain: mainnet,
+      transport: http(),
+    });
+
+    protocol.registerBufferProtocol('ethereum', async (request, callback) => {
+
+      let url = new URL(request.url);
+
+      let contractAddress = url.hostname;
+      let contractMethodName = url.pathname.substring(1);
+      
+      let contractMethodArgsDef = [];
+      let contractMethodArgs = [];
+      url.searchParams.forEach((argValue, key) => {
+        let [argName, argType] = key.split(':');
+
+        contractMethodArgsDef.push({
+          name: argName,
+          type: argType
+        })
+        contractMethodArgs.push(argValue)
+      })
+
+      let contract = {
+        address: contractAddress,
+        abi: [
+          {
+            inputs: contractMethodArgsDef,
+            name: contractMethodName,
+            // Assuming string output
+            outputs: [{ name: '', type: 'string' }],
+            stateMutability: 'view',
+            type: 'function',
+          },
+        ],
+      };
+
+      let output = await client.readContract({
+          ...contract,
+          functionName: contractMethodName,
+          args: contractMethodArgs,
+        })
+
+      callback({ mimeType: 'text/html', data: Buffer.from(output) })
+    })
   }
 
   /**

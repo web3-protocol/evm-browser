@@ -27,7 +27,9 @@
     "start": "electron example/main.js"
   },
   "dependencies": {
-    "electron-log": "^3.0.7"
+    "electron-log": "^3.0.7",
+    "undici": "^5.20.0",
+    "viem": "^0.1.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",

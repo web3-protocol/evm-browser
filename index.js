@@ -214,13 +214,20 @@ class BrowserLikeWindow extends EventEmitter {
 
       let url = new URL(request.url);
 
+      // Contract address / ENS
       let contractAddress = url.hostname;
       if(contractAddress.endsWith('.eth')) {
-        contractAddress = await client.getEnsAddress({ name: contractAddress });
+        let contractEnsName = contractAddress;
+        contractAddress = await client.getEnsAddress({ name: contractEnsName });
+        if(contractAddress == "0x0000000000000000000000000000000000000000") {
+          let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve ENS ' + contractEnsName + '</html>';
+          callback({ mimeType: 'text/html', data: Buffer.from(output) })
+          return;
+        }
       }
 
+      // Contract method && args
       let contractMethodName = url.pathname.substring(1);
-      
       let contractMethodArgsDef = [];
       let contractMethodArgs = [];
       url.searchParams.forEach((argValue, key) => {
@@ -233,6 +240,7 @@ class BrowserLikeWindow extends EventEmitter {
         contractMethodArgs.push(argValue)
       })
 
+      // Contract definition
       let contract = {
         address: contractAddress,
         abi: [
@@ -247,11 +255,18 @@ class BrowserLikeWindow extends EventEmitter {
         ],
       };
 
-      let output = await client.readContract({
+      // Make the call!
+      let output = "";
+      try {
+        output = await client.readContract({
           ...contract,
           functionName: contractMethodName,
           args: contractMethodArgs,
         })
+      }
+      catch(err) {
+        output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></html>';
+      }
 
       callback({ mimeType: 'text/html', data: Buffer.from(output) })
     })

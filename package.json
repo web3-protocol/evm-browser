@@ -29,7 +29,8 @@
   "dependencies": {
     "electron-log": "^3.0.7",
     "undici": "^5.20.0",
-    "viem": "^0.1.5"
+    "viem": "^0.1.5",
+    "yargs": "^17.7.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",

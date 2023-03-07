@@ -202,7 +202,7 @@ class BrowserLikeWindow extends EventEmitter {
     // ethereum:// protocol
     const client = createPublicClient({
       chain: mainnet,
-      transport: http(),
+      transport: http(this.options.web3Url),
     });
 
     protocol.registerBufferProtocol('ethereum', async (request, callback) => {

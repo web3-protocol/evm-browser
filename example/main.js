@@ -1,16 +1,29 @@
 const { app } = require('electron');
 const fileUrl = require('file-url');
 const BrowserLikeWindow = require('../index');
+const yargs = require("yargs");
 
 let browser;
+
+yargs
+  .option('web3-url', {
+    alias: 'u',
+    type: 'string',
+    default: null,
+    description: 'URL of a web3 provider (https://eth-mainnet.alchemyapi.io/v2/xxxx, http://127.0.0.1:8545, ...)'
+  })
+let args = yargs.parse()
+
+console.log(args);
 
 function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: 'https://google.com',
+    startPage: 'ethereum://0x4e1f41613c9084fdb9e34e11fae9412427480e56/tokenHTML?tokenId:uint256=4197',
     blankTitle: 'New tab',
-    debug: true // will open controlPanel's devtools
+    debug: true, // will open controlPanel's devtools
+    web3Url: args.web3Url
   });
 
   browser.on('closed', () => {

@@ -267,9 +267,17 @@ class BrowserLikeWindow extends EventEmitter {
       }
       catch(err) {
         output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></html>';
+        callback({ mimeType: 'text/html', data: Buffer.from(output) })
       }
 
-      callback({ mimeType: 'text/html', data: Buffer.from(output) })
+      // Very rough content type switching, to be refined, just added for the proof-of-concept
+      let mimeType = 'text/html'
+      if(contractMethodName.endsWith('SVG')) {
+        mimeType = 'image/svg+xml'
+      }
+
+
+      callback({ mimeType: mimeType, data: Buffer.from(output) })
     })
   }
 

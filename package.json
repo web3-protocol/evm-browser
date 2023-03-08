@@ -1,7 +1,7 @@
 {
-  "name": "ethereum-browser",
+  "name": "evm-browser",
   "version": "1.0.0",
-  "description": "Make electron like browser easy and flexible, with added ethereum:// protocol scheme support.",
+  "description": "Make electron like browser easy and flexible, with added evm:// protocol scheme support.",
   "keywords": [
     "electron",
     "browser",
@@ -14,7 +14,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nand2/ethereum-browser"
+    "url": "https://github.com/nand2/evm-browser"
   },
   "files": [
     "index.js",

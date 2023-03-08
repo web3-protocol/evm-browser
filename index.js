@@ -201,7 +201,7 @@ class BrowserLikeWindow extends EventEmitter {
 
     
     /**
-     * ethereum:// protocol
+     * evm:// protocol
      */
 
     // Viem client
@@ -211,7 +211,7 @@ class BrowserLikeWindow extends EventEmitter {
     });
 
     // Register protocol
-    protocol.registerBufferProtocol("ethereum", async (request, callback) => {
+    protocol.registerBufferProtocol("evm", async (request, callback) => {
 
       let url = new URL(request.url);
 

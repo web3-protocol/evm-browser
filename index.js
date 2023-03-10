@@ -204,16 +204,34 @@ class BrowserLikeWindow extends EventEmitter {
      * evm:// protocol
      */
 
-    // Viem client
-    const client = createPublicClient({
-      chain: web3Chains[options.web3Chain],
-      transport: http(this.options.web3Url),
-    });
-
     // Register protocol
     protocol.registerBufferProtocol("evm", async (request, callback) => {
 
       let url = new URL(request.url);
+
+      // Web3 network : if provided in the URL, use it, or mainnet by default
+      let web3Chain = "mainnet";
+      let web3Url = null;
+      if(url.username && web3Chains[url.username] !== undefined) {
+        web3Chain = url.username;
+      }
+      // If the network was specified by CLI:
+      // The requested chain in the URL must match the one from the CLI
+      if(options.web3Chain) {
+        if(options.web3Chain != web3Chain) {
+          let output = '<html><head><meta charset="utf-8" /></head><body>The requested chain is ' + web3Chain + ' but the browser was started with the chain forced to ' + options.web3Chain + '</html>';
+          callback({ mimeType: 'text/html', data: Buffer.from(output) })
+        }
+
+        web3Url = options.web3Url
+        web3Chain = options.web3Chain ? options.web3Chain : "mainnet";
+      }
+
+      // Prepare the web3 client
+      const client = createPublicClient({
+        chain: web3Chains[web3Chain],
+        transport: http(web3Url),
+      });
 
       // Contract address / ENS
       let contractAddress = url.hostname;
@@ -255,6 +273,7 @@ class BrowserLikeWindow extends EventEmitter {
           },
         ],
       };
+
 
       // Make the call!
       let output = "";

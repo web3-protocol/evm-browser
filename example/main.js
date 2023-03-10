@@ -16,13 +16,18 @@ yargs
   .option('web3-chain', {
     alias: 'wc',
     type: 'string',
-    default: 'mainnet',
+    defaultDescription: 'mainnet',
     description: 'Web3 chain to use (' + Object.keys(web3Chains).join(', ') + ')'
   })
 let args = yargs.parse()
 
-if(web3Chains[args.web3Chain] === undefined) {
+if(args.web3Chain && web3Chains[args.web3Chain] === undefined) {
   console.log("Chain " + args.web3Chain + " is invalid");
+  process.exit(1)
+}
+
+if(args.web3Url && args.web3Chain == null) {
+  console.log("If specifying a web3 URL, you must specify the chain to use.");
   process.exit(1)
 }
 

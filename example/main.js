@@ -123,7 +123,7 @@ function registerEvmProtocol() {
       }
     }
 
-    // Contract method && args
+    // Contract method && args && result
     // 2 modes :
     // - raw : support calling all the contracts
     //   /raw/<contractMethod>?<arg1Name>:<dataType>=<argValue>[&...][&result=<dataType>[;<mimeType>]]
@@ -133,14 +133,28 @@ function registerEvmProtocol() {
     let contractMethodArgsDef = [];
     let contractMethodArgs = [];
     let contractMethodNameParts = contractMethodName.split("/");
+    let contractReturnDataType = 'string';
+    let contractReturnMimeType = 'text/html';
+    // For now, we only support the raw mode
     if(contractMethodNameParts[0] != "raw") {
       let output = '<html><head><meta charset="utf-8" /></head><body>Only the raw mode of the evm:// protocol is implemented for now.</body></html>';
       callback({ mimeType: 'text/html', data: output })
       return;
     }
     contractMethodName = contractMethodNameParts[1];
-    // For now, we only support the raw mode
     url.searchParams.forEach((argValue, key) => {
+      // Special case : "result"
+      if(key == "result") {
+        let [argReturnDataType, argReturnMimeType] = argValue.split(';')
+        if(argReturnDataType) {
+          contractReturnDataType = argReturnDataType;
+        }
+        if(argReturnMimeType) {
+          contractReturnMimeType = argReturnMimeType;
+        }
+        return;
+      }
+
       let [argName, argType] = key.split(':');
 
       contractMethodArgsDef.push({
@@ -158,7 +172,7 @@ function registerEvmProtocol() {
           inputs: contractMethodArgsDef,
           name: contractMethodName,
           // Assuming string output
-          outputs: [{ name: '', type: 'string' }],
+          outputs: [{ name: '', type: contractReturnDataType }],
           stateMutability: 'view',
           type: 'function',
         },
@@ -181,14 +195,7 @@ function registerEvmProtocol() {
       return;
     }
 
-    // Very rough content type switching, to be refined, just added for the proof-of-concept
-    let mimeType = 'text/html'
-    if(contractMethodName.endsWith('SVG')) {
-      mimeType = 'image/svg+xml'
-    }
-
-
-    callback({ mimeType: mimeType, data: output })
+    callback({ mimeType: contractReturnMimeType, data: output })
   })
 
   console.log('EVM protocol registered: ', result)

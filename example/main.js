@@ -124,9 +124,22 @@ function registerEvmProtocol() {
     }
 
     // Contract method && args
+    // 2 modes :
+    // - raw : support calling all the contracts
+    //   /raw/<contractMethod>?<arg1Name>:<dataType>=<argValue>[&...][&result=<dataType>[;<mimeType>]]
+    // - standard : the contract implements an interface for a simplitied URL
+    //   /<path>?<arg1Name>=<argValue>&...
     let contractMethodName = url.pathname.substring(1);
     let contractMethodArgsDef = [];
     let contractMethodArgs = [];
+    let contractMethodNameParts = contractMethodName.split("/");
+    if(contractMethodNameParts[0] != "raw") {
+      let output = '<html><head><meta charset="utf-8" /></head><body>Only the raw mode of the evm:// protocol is implemented for now.</body></html>';
+      callback({ mimeType: 'text/html', data: output })
+      return;
+    }
+    contractMethodName = contractMethodNameParts[1];
+    // For now, we only support the raw mode
     url.searchParams.forEach((argValue, key) => {
       let [argName, argType] = key.split(':');
 

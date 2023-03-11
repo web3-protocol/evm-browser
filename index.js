@@ -2,12 +2,6 @@ const { BrowserWindow, BrowserView, ipcMain, app, protocol } = require('electron
 const EventEmitter = require('events');
 const log = require('electron-log');
 
-const { createPublicClient, http } = require('viem');
-const web3Chains = require('viem/chains');
-
-const { fetch } = require("undici");
-global.fetch = fetch;
-
 log.transports.file.level = false;
 log.transports.console.level = false;
 
@@ -199,105 +193,7 @@ class BrowserLikeWindow extends EventEmitter {
       log.transports.console.level = 'debug';
     }
 
-    
-    /**
-     * evm:// protocol
-     */
 
-    // Register protocol
-    protocol.registerBufferProtocol("evm", async (request, callback) => {
-
-      let url = new URL(request.url);
-
-      // Web3 network : if provided in the URL, use it, or mainnet by default
-      let web3Chain = "mainnet";
-      let web3Url = null;
-      if(url.username && web3Chains[url.username] !== undefined) {
-        web3Chain = url.username;
-      }
-      // If the network was specified by CLI:
-      // The requested chain in the URL must match the one from the CLI
-      if(options.web3Chain) {
-        if(options.web3Chain != web3Chain) {
-          let output = '<html><head><meta charset="utf-8" /></head><body>The requested chain is ' + web3Chain + ' but the browser was started with the chain forced to ' + options.web3Chain + '</html>';
-          callback({ mimeType: 'text/html', data: Buffer.from(output) })
-        }
-
-        web3Url = options.web3Url
-        web3Chain = options.web3Chain ? options.web3Chain : "mainnet";
-      }
-
-      // Prepare the web3 client
-      const client = createPublicClient({
-        chain: web3Chains[web3Chain],
-        transport: http(web3Url),
-      });
-
-      // Contract address / ENS
-      let contractAddress = url.hostname;
-      if(contractAddress.endsWith('.eth')) {
-        let contractEnsName = contractAddress;
-        contractAddress = await client.getEnsAddress({ name: contractEnsName });
-        if(contractAddress == "0x0000000000000000000000000000000000000000") {
-          let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve ENS ' + contractEnsName + '</html>';
-          callback({ mimeType: 'text/html', data: Buffer.from(output) })
-          return;
-        }
-      }
-
-      // Contract method && args
-      let contractMethodName = url.pathname.substring(1);
-      let contractMethodArgsDef = [];
-      let contractMethodArgs = [];
-      url.searchParams.forEach((argValue, key) => {
-        let [argName, argType] = key.split(':');
-
-        contractMethodArgsDef.push({
-          name: argName,
-          type: argType
-        })
-        contractMethodArgs.push(argValue)
-      })
-
-      // Contract definition
-      let contract = {
-        address: contractAddress,
-        abi: [
-          {
-            inputs: contractMethodArgsDef,
-            name: contractMethodName,
-            // Assuming string output
-            outputs: [{ name: '', type: 'string' }],
-            stateMutability: 'view',
-            type: 'function',
-          },
-        ],
-      };
-
-
-      // Make the call!
-      let output = "";
-      try {
-        output = await client.readContract({
-          ...contract,
-          functionName: contractMethodName,
-          args: contractMethodArgs,
-        })
-      }
-      catch(err) {
-        output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></html>';
-        callback({ mimeType: 'text/html', data: Buffer.from(output) })
-      }
-
-      // Very rough content type switching, to be refined, just added for the proof-of-concept
-      let mimeType = 'text/html'
-      if(contractMethodName.endsWith('SVG')) {
-        mimeType = 'image/svg+xml'
-      }
-
-
-      callback({ mimeType: mimeType, data: Buffer.from(output) })
-    })
   }
 
   /**

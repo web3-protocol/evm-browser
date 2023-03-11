@@ -1,8 +1,12 @@
-const { app } = require('electron');
+const { app, protocol } = require('electron');
 const fileUrl = require('file-url');
 const BrowserLikeWindow = require('../index');
 const yargs = require("yargs");
+
+const { createPublicClient, http } = require('viem');
 const web3Chains = require('viem/chains');
+const { fetch } = require("undici");
+global.fetch = fetch;
 
 let browser;
 
@@ -31,6 +35,7 @@ if(args.web3Url && args.web3Chain == null) {
   process.exit(1)
 }
 
+
 function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
@@ -38,8 +43,6 @@ function createWindow() {
     startPage: 'evm://0x4e1f41613c9084fdb9e34e11fae9412427480e56/tokenHTML?tokenId:uint256=4197',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
-    web3Url: args.web3Url,
-    web3Chain: args.web3Chain
   });
 
   browser.on('closed', () => {
@@ -47,7 +50,15 @@ function createWindow() {
   });
 }
 
+
+// // Register the evm protocol as priviledged (authorize the fetch API)
+// protocol.registerSchemesAsPrivileged([
+//   { scheme: 'evm', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
+// ])
+
+
 app.on('ready', async () => {
+  registerEvmProtocol();
   createWindow();
 });
 
@@ -67,3 +78,105 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+
+function registerEvmProtocol() {
+  // Register protocol
+  let result = protocol.registerStringProtocol("evm", async (request, callback) => {
+
+    let url = new URL(request.url);
+
+    // Web3 network : if provided in the URL, use it, or mainnet by default
+    let web3Chain = "mainnet";
+    let web3Url = null;
+    if(url.username && web3Chains[url.username] !== undefined) {
+      web3Chain = url.username;
+    }
+    // If the network was specified by CLI:
+    // The requested chain in the URL must match the one from the CLI
+    if(args.web3Chain) {
+      if(args.web3Chain != web3Chain) {
+        let output = '<html><head><meta charset="utf-8" /></head><body>The requested chain is ' + web3Chain + ' but the browser was started with the chain forced to ' + args.web3Chain + '</body></html>';
+        callback({ mimeType: 'text/html', data: output })
+        return;
+      }
+
+      web3Url = args.web3Url
+      web3Chain = args.web3Chain ? args.web3Chain : "mainnet";
+    }
+
+    // Prepare the web3 client
+    const client = createPublicClient({
+      chain: web3Chains[web3Chain],
+      transport: http(web3Url),
+    });
+
+    // Contract address / ENS
+    let contractAddress = url.hostname;
+    if(contractAddress.endsWith('.eth')) {
+      let contractEnsName = contractAddress;
+      contractAddress = await client.getEnsAddress({ name: contractEnsName });
+      if(contractAddress == "0x0000000000000000000000000000000000000000") {
+        let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve ENS ' + contractEnsName + '</body></html>';
+        callback({ mimeType: 'text/html', data: output })
+        return;
+      }
+    }
+
+    // Contract method && args
+    let contractMethodName = url.pathname.substring(1);
+    let contractMethodArgsDef = [];
+    let contractMethodArgs = [];
+    url.searchParams.forEach((argValue, key) => {
+      let [argName, argType] = key.split(':');
+
+      contractMethodArgsDef.push({
+        name: argName,
+        type: argType
+      })
+      contractMethodArgs.push(argValue)
+    })
+
+    // Contract definition
+    let contract = {
+      address: contractAddress,
+      abi: [
+        {
+          inputs: contractMethodArgsDef,
+          name: contractMethodName,
+          // Assuming string output
+          outputs: [{ name: '', type: 'string' }],
+          stateMutability: 'view',
+          type: 'function',
+        },
+      ],
+    };
+
+
+    // Make the call!
+    let output = "";
+    try {
+      output = await client.readContract({
+        ...contract,
+        functionName: contractMethodName,
+        args: contractMethodArgs,
+      })
+    }
+    catch(err) {
+      output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';
+      callback({ mimeType: 'text/html', data: output })
+      return;
+    }
+
+    // Very rough content type switching, to be refined, just added for the proof-of-concept
+    let mimeType = 'text/html'
+    if(contractMethodName.endsWith('SVG')) {
+      mimeType = 'image/svg+xml'
+    }
+
+
+    callback({ mimeType: mimeType, data: output })
+  })
+
+  console.log('EVM protocol registered: ', result)
+}

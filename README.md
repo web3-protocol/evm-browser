@@ -7,7 +7,7 @@ Example :
 
 ``evm://goerli@0x189a38638F84Cc8450D09B75b417657B70bff2A4/raw/indexHTML?pageNumber:uint256=1``
 
-will load a proof-of-concept "on-chain website" interacting with Terraforms (see contract on [etherscan](https://goerli.etherscan.io/address/0x189a38638F84Cc8450D09B75b417657B70bff2A4#code))
+will load a proof-of-concept "on-chain website" served by a smart contract and interacting with Terraforms (see contract on [etherscan](https://goerli.etherscan.io/address/0x189a38638F84Cc8450D09B75b417657B70bff2A4#code))
 
 ![./screenshot2.png](./screenshot2.png)
 

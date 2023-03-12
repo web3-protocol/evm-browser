@@ -39,7 +39,7 @@ Will call the tokenHTML method of the terraform contract on mainnet, ask for tok
 
 evm-browser also ships with [Frame.sh](https://frame.sh/) wallet and local node wallet support, which allows us to have a full read+write experience!
 
-This is thanks to [ethereum-provider](https://github.com/floating/ethereum-provider), which is exposed on ``window.ethereum``
+This is thanks to [eth-provider](https://github.com/floating/eth-provider), which is exposed on ``window.ethereum``
 
 ## Install
 

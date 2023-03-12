@@ -1,8 +1,8 @@
 const { app, protocol } = require('electron');
 const fileUrl = require('file-url');
 const BrowserLikeWindow = require('../index');
-const yargs = require("yargs");
 
+const yargs = require("yargs");
 const { createPublicClient, http } = require('viem');
 const web3Chains = require('viem/chains');
 const { fetch } = require("undici");
@@ -40,7 +40,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: 'evm://0x4e1f41613c9084fdb9e34e11fae9412427480e56/tokenHTML?tokenId:uint256=4197',
+    startPage: 'evm://goerli@0x189a38638F84Cc8450D09B75b417657B70bff2A4/raw/indexHTML?pageNumber:uint256=1',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
   });

@@ -23,13 +23,19 @@
   ],
   "scripts": {
     "docs": "documentation build *.js -f html -o docs",
-    "start:control": "npx babel --watch example/renderer/control.jsx --out-file example/renderer/control-compiled.js",
+    "start:control-dev": "npx babel --watch example/renderer/control.jsx --out-file example/renderer/control-compiled.js",
+    "start:control": "npx babel example/renderer/control.jsx --out-file example/renderer/control-compiled.js",
+    "start:webpack": "npx webpack",
+    "start:setup": "npx babel example/renderer/control.jsx --out-file example/renderer/control-compiled.js && npx webpack",
     "start": "electron example/main.js"
   },
   "dependencies": {
     "electron-log": "^3.0.7",
+    "eth-provider": "^0.13.6",
     "undici": "^5.20.0",
     "viem": "^0.1.5",
+    "webpack": "^5.76.1",
+    "webpack-cli": "^5.0.1",
     "yargs": "^17.7.1"
   },
   "devDependencies": {

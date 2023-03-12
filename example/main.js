@@ -1,4 +1,4 @@
-const { app, protocol } = require('electron');
+const { app, protocol, ipcMain } = require('electron');
 const fileUrl = require('file-url');
 const BrowserLikeWindow = require('../index');
 
@@ -7,8 +7,14 @@ const { createPublicClient, http } = require('viem');
 const web3Chains = require('viem/chains');
 const { fetch } = require("undici");
 global.fetch = fetch;
+const fs = require('fs')
 
 let browser;
+
+
+//
+// Args processing
+//
 
 yargs
   .option('web3-url', {
@@ -36,6 +42,10 @@ if(args.web3Url && args.web3Chain == null) {
 }
 
 
+//
+// Main electron lifecycle
+//
+
 function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
@@ -43,19 +53,15 @@ function createWindow() {
     startPage: 'evm://goerli@0x189a38638F84Cc8450D09B75b417657B70bff2A4/raw/indexHTML?pageNumber:uint256=1',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
+    viewReferences: {
+      preload: `${__dirname}/eth-provider-preload.js`,
+    }
   });
 
   browser.on('closed', () => {
     browser = null;
   });
 }
-
-
-// // Register the evm protocol as priviledged (authorize the fetch API)
-// protocol.registerSchemesAsPrivileged([
-//   { scheme: 'evm', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
-// ])
-
 
 app.on('ready', async () => {
   registerEvmProtocol();
@@ -80,6 +86,23 @@ app.on('activate', () => {
 });
 
 
+//
+// evm:// support
+//
+
+// Expose a JS file to inject in pages, that will populate window.ethereum with
+// https://github.com/floating/eth-provider, allowing the webpages to connect
+// to the Frame.sh wallet or local ethereum nodes, using the standard EIP-1193 way
+ipcMain.handle('getEthProviderJs', () => 
+    fs.readFileSync(`${__dirname}/../dist/eth-provider-injected.packed.js`).toString()
+)
+
+// // Register the evm protocol as priviledged (authorize the fetch API)
+// protocol.registerSchemesAsPrivileged([
+//   { scheme: 'evm', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
+// ])
+
+// Register and handle the evm:// protocol
 function registerEvmProtocol() {
   // Register protocol
   let result = protocol.registerStringProtocol("evm", async (request, callback) => {

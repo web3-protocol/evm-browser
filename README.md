@@ -39,7 +39,7 @@ Will call the tokenHTML method of the terraform contract on mainnet, ask for tok
 
 `yarn install`
 
-`yarn start:control`
+`yarn start:setup`
 
 ## Usage
 

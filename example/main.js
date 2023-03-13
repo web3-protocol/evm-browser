@@ -51,7 +51,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: 'evm://goerli@0x189a38638F84Cc8450D09B75b417657B70bff2A4/call/indexHTML(uint256)?arg=1',
+    startPage: 'evm://5@0x189a38638F84Cc8450D09B75b417657B70bff2A4/call/indexHTML(uint256)?arg=1',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
     viewReferences: {
@@ -113,8 +113,8 @@ function registerEvmProtocol() {
     // Web3 network : if provided in the URL, use it, or mainnet by default
     let web3Chain = "mainnet";
     let web3Url = null;
-    if(url.username && web3Chains[url.username] !== undefined) {
-      web3Chain = url.username;
+    if(url.username && Object.values(web3Chains).filter(chain => chain.id == url.username).length == 1) {
+      web3Chain = Object.values(web3Chains).filter(chain => chain.id == url.username)[0].network;
     }
     // If the network was specified by CLI:
     // The requested chain in the URL must match the one from the CLI

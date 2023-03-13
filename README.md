@@ -39,6 +39,12 @@ Will call the tokenHTML method of the terraform contract on mainnet, ask for tok
 
 This call the levelAndTile method of the TerraformsData contract, which have 2 uint as arguments. This returns 2 uints, we display the second. And we display as text.
 
+## Wallet support
+
+evm-browser also ships with [Frame.sh](https://frame.sh/) wallet and local node wallet support, which allows us to have a full read+write experience!
+
+This is thanks to [eth-provider](https://github.com/floating/eth-provider), which is exposed on ``window.ethereum``
+
 ## Install
 
 `yarn install`

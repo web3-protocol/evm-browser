@@ -52,7 +52,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: args._.length == 1 ? args._[0] : 'evm://0xD3a0d2CEc61014A323C216dEDd133F977496971f.5/call/indexHTML(uint256)?arg=1',
+    startPage: args._.length == 1 ? args._[0] : 'evm://0xF311246e34cC59AdfaB6b9E486d18f67FB8C3e51.5/call/indexHTML(uint256)?arg=1',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
     viewReferences: {

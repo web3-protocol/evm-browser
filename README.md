@@ -5,9 +5,9 @@ Forked from the great [electron-as-browser](https://github.com/hulufei/electron-
 
 Example : 
 
-``evm://0xD3a0d2CEc61014A323C216dEDd133F977496971f.5/call/indexHTML(uint256)?arg=1``
+``evm://0xF311246e34cC59AdfaB6b9E486d18f67FB8C3e51.5/call/indexHTML(uint256)?arg=1``
 
-will load a goerli proof-of-concept "on-chain website" served by a smart contract and interacting with Terraforms (see contract on [etherscan](https://goerli.etherscan.io/address/0x189a38638F84Cc8450D09B75b417657B70bff2A4#code))
+will load a goerli proof-of-concept "on-chain website" served by a smart contract and interacting with Terraforms (see contract on [etherscan](https://goerli.etherscan.io/address/0xF311246e34cC59AdfaB6b9E486d18f67FB8C3e51#code))
 
 ![./screenshot2.png](./screenshot2.png)
 

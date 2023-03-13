@@ -8,6 +8,7 @@ const web3Chains = require('viem/chains');
 const { fetch } = require("undici");
 global.fetch = fetch;
 const fs = require('fs')
+var mime = require('mime-types')
 
 let browser;
 
@@ -50,7 +51,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: 'evm://goerli@0x189a38638F84Cc8450D09B75b417657B70bff2A4/raw/indexHTML?pageNumber:uint256=1',
+    startPage: 'evm://goerli@0x189a38638F84Cc8450D09B75b417657B70bff2A4/call/indexHTML(uint256)?arg=1',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
     viewReferences: {
@@ -148,58 +149,73 @@ function registerEvmProtocol() {
 
     // Contract method && args && result
     // 2 modes :
-    // - raw : support calling all the contracts
-    //   /raw/<contractMethod>?<arg1Name>:<dataType>=<argValue>[&...][&result=<dataType>[;<mimeType>]]
+    // - low-level : support calling all the contracts
+    //   /call/:contractMethod(:argType,:arg2Type)(,,:resultType).:extension?arg=:firstArg&arg=:secondArg
     // - standard : the contract implements an interface for a simplitied URL
     //   /<path>?<arg1Name>=<argValue>&...
-    let contractMethodName = url.pathname.substring(1);
+    let contractMethodName = '';
     let contractMethodArgsDef = [];
     let contractMethodArgs = [];
-    let contractMethodNameParts = contractMethodName.split("/");
-    let contractReturnDataType = 'string';
+    let contractReturnDataTypes = [{type: 'string'}];
     let contractReturnMimeType = 'text/html';
-    // For now, we only support the raw mode
-    if(contractMethodNameParts[0] != "raw") {
-      let output = '<html><head><meta charset="utf-8" /></head><body>Only the raw mode of the evm:// protocol is implemented for now.</body></html>';
+
+    let elements = url.pathname.match(/^(?<lowlevel>\/call)?\/(?<method>[^?.()]+)(?:\((?<args>[^)]+)\))?(?:\((?<return>[^)]+)\))?(?:\.(?<extension>[a-z]+))?$/)
+
+    // For now, we only support the low-level mode
+    if(elements.groups.lowlevel === undefined) {
+      let output = '<html><head><meta charset="utf-8" /></head><body>Only the low-level mode of the evm:// protocol is implemented for now.</body></html>';
       callback({ mimeType: 'text/html', data: output })
       return;
     }
-    contractMethodName = contractMethodNameParts[1];
-    url.searchParams.forEach((argValue, key) => {
-      // Special case : "result"
-      if(key == "result") {
-        let [argReturnDataType, argReturnMimeType] = argValue.split(';')
-        if(argReturnDataType) {
-          contractReturnDataType = argReturnDataType;
-        }
-        if(argReturnMimeType) {
-          contractReturnMimeType = argReturnMimeType;
-        }
+
+    contractMethodName = elements.groups.method;
+
+    let argsNaming = [];
+    if(elements.groups.args) {
+      argsNaming = elements.groups.args.split(',').map(arg => decodeURI(arg).trim().replace(/ +/g, " ").split(" "));
+      contractMethodArgsDef = argsNaming.map(argNaming => ({type: argNaming[0]}))
+    }
+
+    // All the params must be provided
+    if(contractMethodArgsDef.length != Array.from(url.searchParams.values()).length) {
+      let output = '<html><head><meta charset="utf-8" /></head><body>In low-level mode of the evm:// protocol, all arguments must be provided</body></html>';
+      callback({ mimeType: 'text/html', data: output })
+      return;
+    }
+
+    contractMethodArgs = argsNaming.map((argNaming, argId) => 
+      // If named, find by name, otherwise take by index
+      (argNaming.length == 2) ? url.searchParams.get(argNaming[1]) : Array.from(url.searchParams.values())[argId]
+    )
+
+    if(elements.groups.return) {
+      contractReturnDataTypes = elements.groups.return.split(',').map(returnType => decodeURI(returnType).trim().replace(/ +/g, " ")).map(returnType => ({type: returnType}))
+    }
+
+    if(elements.groups.extension) {
+      contractReturnMimeType = mime.lookup(elements.groups.extension);
+      if(contractReturnMimeType == false) {
+        let output = '<html><head><meta charset="utf-8" /></head><body>Unrecognized extension</body></html>';
+        callback({ mimeType: 'text/html', data: output })
         return;
       }
+    }
 
-      let [argName, argType] = key.split(':');
-
-      contractMethodArgsDef.push({
-        name: argName,
-        type: argType
-      })
-      contractMethodArgs.push(argValue)
-    })
 
     // Contract definition
+    let abi = [
+      {
+        inputs: contractMethodArgsDef,
+        name: contractMethodName,
+        // Assuming string output
+        outputs: contractReturnDataTypes,
+        stateMutability: 'view',
+        type: 'function',
+      },
+    ];
     let contract = {
       address: contractAddress,
-      abi: [
-        {
-          inputs: contractMethodArgsDef,
-          name: contractMethodName,
-          // Assuming string output
-          outputs: [{ name: '', type: contractReturnDataType }],
-          stateMutability: 'view',
-          type: 'function',
-        },
-      ],
+      abi: abi,
     };
 
 
@@ -218,7 +234,12 @@ function registerEvmProtocol() {
       return;
     }
 
-    callback({ mimeType: contractReturnMimeType, data: output })
+    // If we specified multiple return data types, we want the last
+    if(contractReturnDataTypes.length > 1) {
+      output = output[contractReturnDataTypes.length - 1]
+    }
+
+    callback({ mimeType: contractReturnMimeType, data: "" + output })
   })
 
   console.log('EVM protocol registered: ', result)

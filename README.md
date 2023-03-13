@@ -5,7 +5,7 @@ Forked from the great [electron-as-browser](https://github.com/hulufei/electron-
 
 Example : 
 
-``evm://goerli@0x189a38638F84Cc8450D09B75b417657B70bff2A4/raw/indexHTML?pageNumber:uint256=1``
+``evm://goerli@0x189a38638F84Cc8450D09B75b417657B70bff2A4/call/indexHTML(uint256)?arg=1``
 
 will load a proof-of-concept "on-chain website" served by a smart contract and interacting with Terraforms (see contract on [etherscan](https://goerli.etherscan.io/address/0x189a38638F84Cc8450D09B75b417657B70bff2A4#code))
 
@@ -17,23 +17,27 @@ Since `evm://` is supported at the browser level, alls links, XHR fetchs will wo
 
 I see 2 modes of usage : a mode which work for all contracts, but end up with cumbersome URLs (the "raw") mode, and a mode in which the contract implements an interface to allow more concise URLs.
 
-Raw mode, implemented:
+Raw mode, implemented -- still moving parts:
 
-`evm://[<networkName>@]<contractAddress>/raw/<contractMethod>?<arg1Name>:<dataType>=<argValue>[&...][&result=<dataType>[;<mimeType>]]`
+`evm://[<networkId>@]<contractAddress>/call/<contractMethod>(<argsType>)(<resultType>)?arg=<argValue>[&...]`
 
 "Standard" mode, not implemented:
 
 ``evm://[<networkName>@]<contractAddress>/<path>?<arg1Name>=<argValue>[&...]``
 
-### Examples
+### Working examples
 
-`evm://goerli@0x5a985f13345e820aa9618826b85f74c3986e1463/raw/tokenSVG?tokenId:uint256=2&result=string;image/svg%2bxml`
+`evm://goerli@0x5a985f13345e820aa9618826b85f74c3986e1463/call/tokenSVG(uint256).svg?arg=2`
 
-Will call the tokenSVG method of the terraform contract located on goerli, ask for tokenId 2 and cast the result as image/svg+xml.
+Will call the tokenSVG method of the terraform contract located on goerli, ask for tokenId 2 and cast the result as image/svg+xml. This use unnamed parameters.
 
-`evm://0x4e1f41613c9084fdb9e34e11fae9412427480e56/raw/tokenHTML?tokenId:uint256=4197`
+`evm://0x4e1f41613c9084fdb9e34e11fae9412427480e56/call/tokenHTML(uint256 tokenId)?tokenId=4197`
 
-Will call the tokenHTML method of the terraform contract on mainnet, ask for tokenId 4197 and display its HTML.
+Will call the tokenHTML method of the terraform contract on mainnet, ask for tokenId 4197 and display its HTML. This use named parameters.
+
+`evm://0xA5aFC9fE76a28fB12C60954Ed6e2e5f8ceF64Ff2/call/levelAndTile(uint256,uint256)(uint256,uint256).txt?arg=2&arg=50`
+
+This call the levelAndTile method of the TerraformsData contract, which have 2 uint as arguments. This returns 2 uints, we display the second. And we display as text.
 
 ## Install
 

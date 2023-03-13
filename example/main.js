@@ -18,6 +18,7 @@ let browser;
 //
 
 yargs
+  .usage("evm-browser <start-url> [options]")
   .option('web3-url', {
     alias: 'wu',
     type: 'string',
@@ -51,7 +52,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: 'evm://5@0xD3a0d2CEc61014A323C216dEDd133F977496971f/call/indexHTML(uint256)?arg=1',
+    startPage: args._.length == 1 ? args._[0] : 'evm://5@0xD3a0d2CEc61014A323C216dEDd133F977496971f/call/indexHTML(uint256)?arg=1',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
     viewReferences: {

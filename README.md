@@ -19,11 +19,11 @@ I see 2 modes of usage : a mode which work for all contracts, but end up with cu
 
 Raw mode, implemented -- still moving parts:
 
-`evm://[<networkId>@]<contractAddress>/call/<contractMethod>(<argsType>)(<resultType>)<extension>?arg=<argValue>[&...]`
+`evm://<contractAddress>[.<networkId>]/call/<contractMethod>(<argsType>)(<resultType>)<extension>?arg=<argValue>[&...]`
 
 "Standard" mode, not implemented, with an interface to implement, to be defined:
 
-``evm://[<networkId>@]<contractAddress>/<path>?<arg1Name>=<argValue>[&...]``
+``evm://<contractAddress>[.<networkId>]/<path>?<arg1Name>=<argValue>[&...]``
 
 ### Working examples
 

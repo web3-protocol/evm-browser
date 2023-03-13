@@ -52,7 +52,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: args._.length == 1 ? args._[0] : 'evm://5@0xD3a0d2CEc61014A323C216dEDd133F977496971f/call/indexHTML(uint256)?arg=1',
+    startPage: args._.length == 1 ? args._[0] : 'evm://0xD3a0d2CEc61014A323C216dEDd133F977496971f.5/call/indexHTML(uint256)?arg=1',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
     viewReferences: {
@@ -111,12 +111,22 @@ function registerEvmProtocol() {
 
     let url = new URL(request.url);
 
+    // Contract name && chain : "<contractAddress>.<chainId>"
     // Web3 network : if provided in the URL, use it, or mainnet by default
-    let web3Chain = "mainnet";
     let web3Url = null;
-    if(url.username && Object.values(web3Chains).filter(chain => chain.id == url.username).length == 1) {
-      web3Chain = Object.values(web3Chains).filter(chain => chain.id == url.username)[0].network;
+    let web3Chain = "mainnet";
+    let contractAddress = "";
+    let hostnameParts = url.hostname.split(".");
+    // Was the network id specified?
+    if(hostnameParts.length > 1 && parseInt(hostnameParts[hostnameParts.length - 1]) !== Number.NaN) {
+      let web3ChainId = parseInt(hostnameParts[hostnameParts.length - 1]);
+      if(web3ChainId && Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId).length == 1) {
+        web3Chain = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)[0][0];
+        hostnameParts.pop()
+      }
     }
+    // Build back the address (which can be ENS)
+    contractAddress = hostnameParts.join('.');
     // If the network was specified by CLI:
     // The requested chain in the URL must match the one from the CLI
     if(args.web3Chain) {
@@ -137,7 +147,6 @@ function registerEvmProtocol() {
     });
 
     // Contract address / ENS
-    let contractAddress = url.hostname;
     if(contractAddress.endsWith('.eth')) {
       let contractEnsName = contractAddress;
       contractAddress = await client.getEnsAddress({ name: contractEnsName });

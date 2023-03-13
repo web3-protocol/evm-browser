@@ -5,7 +5,7 @@ Forked from the great [electron-as-browser](https://github.com/hulufei/electron-
 
 Example : 
 
-``evm://5@0xD3a0d2CEc61014A323C216dEDd133F977496971f/call/indexHTML(uint256)?arg=1``
+``evm://0xD3a0d2CEc61014A323C216dEDd133F977496971f.5/call/indexHTML(uint256)?arg=1``
 
 will load a goerli proof-of-concept "on-chain website" served by a smart contract and interacting with Terraforms (see contract on [etherscan](https://goerli.etherscan.io/address/0x189a38638F84Cc8450D09B75b417657B70bff2A4#code))
 
@@ -27,7 +27,7 @@ Raw mode, implemented -- still moving parts:
 
 ### Working examples
 
-`evm://5@0x5a985f13345e820aa9618826b85f74c3986e1463/call/tokenSVG(uint256).svg?arg=2`
+`evm://0x5a985f13345e820aa9618826b85f74c3986e1463.5/call/tokenSVG(uint256).svg?arg=2`
 
 Will call the tokenSVG method of the terraform contract located on goerli (chain id 5), ask for tokenId 2 and cast the result as image/svg+xml. This use unnamed parameters.
 

@@ -99,10 +99,10 @@ ipcMain.handle('getEthProviderJs', () =>
     fs.readFileSync(`${__dirname}/../dist/eth-provider-injected.packed.js`).toString()
 )
 
-// // Register the evm protocol as priviledged (authorize the fetch API)
-// protocol.registerSchemesAsPrivileged([
-//   { scheme: 'evm', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
-// ])
+// Register the evm protocol as priviledged (authorize the fetch API)
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'evm', privileges: { supportFetchAPI: true } }
+])
 
 // Register and handle the evm:// protocol
 function registerEvmProtocol() {

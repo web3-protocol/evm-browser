@@ -11,7 +11,7 @@ will load a goerli proof-of-concept "on-chain website" served by a smart contrac
 
 ![./screenshot2.png](./screenshot2.png)
 
-Since `evm://` is supported at the browser level, alls links, XHR fetchs will work. (Note: fetch() support not yet activated)
+Since `evm://` is supported at the browser level, alls links, fetch() calls will work.
 
 ## evm:// protocol
 

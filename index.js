@@ -452,6 +452,13 @@ class BrowserLikeWindow extends EventEmitter {
       log.debug(`${viewId} destroyed`);
     }
   }
+
+  focusUrlBar() {
+    if(this.ipc) {
+      this.controlView.webContents.focus();
+      this.ipc.reply('focus-url-bar')
+    }
+  }
 }
 
 module.exports = BrowserLikeWindow;

@@ -87,6 +87,18 @@ app.on('activate', () => {
   }
 });
 
+app.on('web-contents-created', function (event, wc) {
+  wc.on('before-input-event', function (event, input) {
+    // On ctrl-L : focus the URL bar
+    if (input.key === 'l' && input.control && !input.alt && !input.meta && !input.shift) {
+      if(browser) {
+        browser.focusUrlBar();
+        event.preventDefault()
+      }
+    }
+  })
+})
+
 
 //
 // evm:// support

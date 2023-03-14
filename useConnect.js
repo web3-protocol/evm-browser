@@ -1,9 +1,21 @@
 const { ipcRenderer } = require('electron');
-const { useEffect, useState } = require('react');
+const { useEffect, useState, useRef } = require('react');
 
 // Used in Renderer process
 
 const noop = () => {};
+
+const useTextFocus = () => {
+    const htmlElRef = useRef(null)
+    const setFocus = () => {
+      if(htmlElRef.current) {
+        htmlElRef.current.focus();
+        htmlElRef.current.select()
+      } 
+    }
+
+    return [ htmlElRef, setFocus ] 
+}
 
 /**
  * A custom hook to create ipc connection between BrowserView and ControlView
@@ -17,6 +29,7 @@ module.exports = function useConnect(options = {}) {
   const [tabs, setTabs] = useState({});
   const [tabIDs, setTabIDs] = useState([]);
   const [activeID, setActiveID] = useState(null);
+  const [urlInputRef, setUrlInputFocus] = useTextFocus()
 
   const channels = [
     [
@@ -34,6 +47,12 @@ module.exports = function useConnect(options = {}) {
         const activeTab = tabs[v] || {};
         onTabActive(activeTab);
       }
+    ],
+    [
+      'focus-url-bar',
+      (e, v) => {
+        setUrlInputFocus()
+      }
     ]
   ];
 
@@ -47,5 +66,5 @@ module.exports = function useConnect(options = {}) {
     };
   }, []);
 
-  return { tabIDs, tabs, setTabs, activeID };
+  return { tabIDs, tabs, setTabs, activeID, urlInputRef };
 };

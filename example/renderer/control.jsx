@@ -91,7 +91,7 @@ const IconRight = () => (
 );
 
 function Control() {
-  const { tabs, setTabs, tabIDs, activeID } = useConnect();
+  const { tabs, setTabs, tabIDs, activeID, urlInputRef } = useConnect();
 
   const { canGoForward, canGoBack, isLoading } = tabs[activeID] || {};
 
@@ -180,6 +180,7 @@ function Control() {
             value={tabs[activeID] !== undefined && tabs[activeID].url !== undefined ? tabs[activeID].url : ''}
             onChange={onUrlChange}
             onKeyDown={onPressEnter}
+            ref={urlInputRef}
           />
         </div>
       </div>

@@ -47,5 +47,5 @@ module.exports = function useConnect(options = {}) {
     };
   }, []);
 
-  return { tabIDs, tabs, activeID };
+  return { tabIDs, tabs, setTabs, activeID };
 };

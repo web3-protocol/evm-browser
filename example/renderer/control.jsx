@@ -91,14 +91,20 @@ const IconRight = () => (
 );
 
 function Control() {
-  const { tabs, tabIDs, activeID } = useConnect();
+  const { tabs, setTabs, tabIDs, activeID } = useConnect();
 
-  const { url, canGoForward, canGoBack, isLoading } = tabs[activeID] || {};
+  const { canGoForward, canGoBack, isLoading } = tabs[activeID] || {};
 
   const onUrlChange = e => {
-    // Sync to tab config
+    // Update URL locally
     const v = e.target.value;
-    action.sendChangeURL(v);
+    let tabsCopy = Object.assign({}, tabs);
+    tabsCopy[activeID].url = v;
+    setTabs(tabsCopy)
+
+    // Disabled : this used to reset cursor position at end at each key stroke
+    // // Sync to tab config
+    // action.sendChangeURL(v);
   };
   const onPressEnter = e => {
     if (e.keyCode !== 13) return;
@@ -171,7 +177,7 @@ function Control() {
           </div>
           <input
             className="address"
-            value={url || ''}
+            value={tabs[activeID] !== undefined && tabs[activeID].url !== undefined ? tabs[activeID].url : ''}
             onChange={onUrlChange}
             onKeyDown={onPressEnter}
           />

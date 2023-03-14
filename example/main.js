@@ -100,6 +100,7 @@ ipcMain.handle('getEthProviderJs', () =>
 )
 
 // Register the evm protocol as priviledged (authorize the fetch API)
+// Must be done before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'evm', privileges: { supportFetchAPI: true } }
 ])

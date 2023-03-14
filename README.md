@@ -15,17 +15,15 @@ Since `evm://` is supported at the browser level, alls links, XHR fetchs will wo
 
 ## evm:// protocol
 
-I see 2 modes of usage : a mode which work for all contracts, but end up with cumbersome URLs (the "raw") mode, and a mode in which the contract implements an interface to allow more concise URLs.
+There will be 2 modes : a mode which work for all contracts, but end up with cumbersome URLs (the "low-level") mode, and a mode in which the contract implements an interface to allow more concise URLs.
 
-Raw mode, implemented -- still moving parts:
+### Low-level mode evm://
 
 `evm://<contractAddress>[.<networkId>]/call/<contractMethod>(<argsType>)(<resultType>)<extension>?arg=<argValue>[&...]`
 
-"Standard" mode, not implemented, with an interface to implement, to be defined:
+In this mode, all method arguments must be provided, in the right order. If the returned data is not HTML (e.g. SVG), it must be written as ``extension``. If the return data type is not a string, it must be specified with ``resultType``. If the method returns multiple variables, all return variables data type must be provided up to the one you want.
 
-``evm://<contractAddress>[.<networkId>]/<path>?<arg1Name>=<argValue>[&...]``
-
-### Working examples
+**Examples:**
 
 `evm://0x5a985f13345e820aa9618826b85f74c3986e1463.5/call/tokenSVG(uint256).svg?arg=2`
 
@@ -38,6 +36,12 @@ Will call the tokenHTML method of the terraform contract on mainnet, ask for tok
 `evm://0xA5aFC9fE76a28fB12C60954Ed6e2e5f8ceF64Ff2/call/levelAndTile(uint256,uint256)(uint256,uint256).txt?arg=2&arg=50`
 
 This call the levelAndTile method of the TerraformsData contract, which have 2 uint as arguments. This returns 2 uints, we display the second. And we display as text.
+
+### "Standard" mode evm://
+
+``evm://<contractAddress>[.<networkId>]/<path>?<arg1Name>=<argValue>[&...]``
+
+Not implemented yet.
 
 ## Wallet support
 

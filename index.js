@@ -137,21 +137,7 @@ class BrowserLikeWindow extends EventEmitter {
       },
       'close-tab': (e, id) => {
         log.debug('close tab ', { id, currentViewId: this.currentViewId });
-        if (id === this.currentViewId) {
-          const removeIndex = this.tabs.indexOf(id);
-          const nextIndex = removeIndex === this.tabs.length - 1 ? 0 : removeIndex + 1;
-          this.setCurrentView(this.tabs[nextIndex]);
-        }
-        this.tabs = this.tabs.filter(v => v !== id);
-        this.tabConfigs = {
-          ...this.tabConfigs,
-          [id]: undefined
-        };
-        this.destroyView(id);
-
-        if (this.tabs.length === 0) {
-          this.newTab();
-        }
+        this.closeTab(id)
       }
     });
 
@@ -450,6 +436,30 @@ class BrowserLikeWindow extends EventEmitter {
       view.webContents.destroy();
       this.views[viewId] = undefined;
       log.debug(`${viewId} destroyed`);
+    }
+  }
+
+  closeTab(id) {
+    if (id === this.currentViewId) {
+      const removeIndex = this.tabs.indexOf(id);
+      let nextIndex = 0;
+      if(removeIndex < this.tabs.length - 1) {
+        nextIndex = removeIndex + 1;
+      }
+      else if(removeIndex > 0) {
+        nextIndex = removeIndex - 1;
+      }
+      this.setCurrentView(this.tabs[nextIndex]);
+    }
+    this.tabs = this.tabs.filter(v => v !== id);
+    this.tabConfigs = {
+      ...this.tabConfigs,
+      [id]: undefined
+    };
+    this.destroyView(id);
+
+    if (this.tabs.length === 0) {
+      this.newTab();
     }
   }
 

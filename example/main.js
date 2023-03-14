@@ -89,10 +89,37 @@ app.on('activate', () => {
 
 app.on('web-contents-created', function (event, wc) {
   wc.on('before-input-event', function (event, input) {
-    // On ctrl-L : focus the URL bar
-    if (input.key === 'l' && input.control && !input.alt && !input.meta && !input.shift) {
-      if(browser) {
+    if(input.type == 'keyDown' && browser) {
+      // On ctrl-L : focus the URL bar
+      if (input.key === 'l' && input.control && !input.alt && !input.meta && !input.shift) {
         browser.focusUrlBar();
+        event.preventDefault()
+      }
+      // On Ctrl-T : new tab, focus URL bar
+      else if (input.key === 't' && input.control && !input.alt && !input.meta && !input.shift) {
+        browser.newTab();
+        browser.focusUrlBar();
+        event.preventDefault()
+      }
+      // On Ctrl-W : close tab
+      else if (input.key === 'w' && input.control && !input.alt && !input.meta && !input.shift) {
+        browser.closeTab(browser.currentViewId)
+        event.preventDefault()
+      }
+      // On Ctrl-PageUp : move tab
+      else if (input.key === 'PageDown' && input.control && !input.alt && !input.meta && !input.shift) {
+        let tabIndex = browser.tabs.indexOf(browser.currentViewId)
+        if(tabIndex < browser.tabs.length - 1) {
+          browser.switchTab(browser.tabs[tabIndex + 1])
+        }
+        event.preventDefault()
+      }
+      // On Ctrl-PageDown : move tab
+      else if (input.key === 'PageUp' && input.control && !input.alt && !input.meta && !input.shift) {
+        let tabIndex = browser.tabs.indexOf(browser.currentViewId)
+        if(tabIndex > 0) {
+          browser.switchTab(browser.tabs[tabIndex - 1])
+        }
         event.preventDefault()
       }
     }

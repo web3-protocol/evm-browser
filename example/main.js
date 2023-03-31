@@ -52,7 +52,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: args._.length == 1 ? args._[0] : 'evm://0xF311246e34cC59AdfaB6b9E486d18f67FB8C3e51.5/call/indexHTML(uint256)?arg=1',
+    startPage: args._.length == 1 ? args._[0] : 'web3://0xF311246e34cC59AdfaB6b9E486d18f67FB8C3e51:5/indexHTML/uint256!1', //'evm://0xF311246e34cC59AdfaB6b9E486d18f67FB8C3e51.5/call/indexHTML(uint256)?arg=1'
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
     viewReferences: {
@@ -66,6 +66,8 @@ function createWindow() {
 }
 
 app.on('ready', async () => {
+  registerWeb3Protocol();
+  // To be removed later
   registerEvmProtocol();
   createWindow();
 });
@@ -127,9 +129,7 @@ app.on('web-contents-created', function (event, wc) {
 })
 
 
-//
-// evm:// support
-//
+
 
 // Expose a JS file to inject in pages, that will populate window.ethereum with
 // https://github.com/floating/eth-provider, allowing the webpages to connect
@@ -138,11 +138,275 @@ ipcMain.handle('getEthProviderJs', () =>
     fs.readFileSync(`${__dirname}/../dist/eth-provider-injected.packed.js`).toString()
 )
 
+
+
 // Register the evm protocol as priviledged (authorize the fetch API)
 // Must be done before the app is ready
 protocol.registerSchemesAsPrivileged([
+  { scheme: 'web3', privileges: { supportFetchAPI: true } },
   { scheme: 'evm', privileges: { supportFetchAPI: true } }
 ])
+
+
+//
+// web3:// support (EIP-4804)
+//
+
+// Register and handle the evm:// protocol
+function registerWeb3Protocol() {
+  // Register protocol
+  let result = protocol.registerStringProtocol("web3", async (request, callback) => {
+    let supportedTypes = [
+      {
+        type: 'uint256',
+        autoDetectable: true,
+        parse: async (x) => {
+          x = parseInt(x)
+          if(x === Number.NaN) {
+            throw new Error("Number is not parseable")
+          }
+          if(x < 0) {
+            throw new Error("Number must be positive")
+          }
+          return x
+        },
+      },
+      {
+        type: 'bytes32',
+        autoDetectable: true,
+        parse: async (x) => {
+          if(x.length != 34) {
+            throw new Error("Bad length (must include 0x in front)")
+          }
+          if(x.substr(0, 2) != '0x') {
+            throw new Error("Must start with 0x")
+          }
+          return x
+        }
+      }, 
+      {
+        type: 'address',
+        autoDetectable: true,
+        parse: async (x) => {
+          if(x.length == 22 && x.substr(0, 2) == '0x') {
+            return x;
+          }
+
+          if(x.endsWith('.eth')) {
+            let xAddress = await client.getEnsAddress({ name: x });
+            if(xAddress == "0x0000000000000000000000000000000000000000") {
+              throw new Error("Unable to resolve the argument as an ethereum .eth address")
+            }
+            return xAddress
+          }
+
+          throw new Error("Unrecognized address")
+        }
+      },
+      {
+        type: 'bytes',
+        autoDetectable: false,
+        parse: async (x) => x,
+      },
+      {
+        type: 'string',
+        autoDetectable: false,
+        parse: async (x) => x,
+      },
+    ];
+
+
+    let url = new URL(request.url);
+
+    // Web3 network : if provided in the URL, use it, or mainnet by default
+    let web3ProviderUrl = null;
+    let web3Chain = "mainnet";    
+    // Was the network id specified?
+    if(parseInt(url.port) !== Number.NaN) {
+      let web3ChainId = parseInt(url.port);
+      if(web3ChainId && Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId).length == 1) {
+        web3Chain = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)[0][0];
+      }
+    }
+    // If the network was specified by CLI:
+    // The requested chain in the URL must match the one from the CLI
+    if(args.web3Chain) {
+      if(args.web3Chain != web3Chain) {
+        let output = '<html><head><meta charset="utf-8" /></head><body>The requested chain is ' + web3Chain + ' but the browser was started with the chain forced to ' + args.web3Chain + '</body></html>';
+        callback({ mimeType: 'text/html', data: output })
+        return;
+      }
+
+      web3ProviderUrl = args.web3Url
+      web3Chain = args.web3Chain ? args.web3Chain : "mainnet";
+    }
+
+    // Prepare the web3 client
+    const client = createPublicClient({
+      chain: web3Chains[web3Chain],
+      transport: http(web3ProviderUrl),
+    });
+
+    // Contract address / ENS
+    let contractAddress = url.hostname;
+    if(contractAddress.endsWith('.eth')) {
+      let contractEnsName = contractAddress;
+      contractAddress = await client.getEnsAddress({ name: contractEnsName });
+      if(contractAddress == "0x0000000000000000000000000000000000000000") {
+        let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve ENS ' + contractEnsName + '</body></html>';
+        callback({ mimeType: 'text/html', data: output })
+        return;
+      }
+    }
+
+    // Contract method && args && result
+    // 2 modes :
+    // - Auto : we parse the path and arguments and send them
+    // - Manual : we forward all the path & arguments as calldata
+    let contractMethodName = '';
+    let contractMethodArgsDef = [];
+    let contractMethodArgs = [];
+    let contractReturnDataTypes = [{type: 'string'}];
+    let contractReturnMimeType = 'text/html';
+    let contractReturnJsonEncode = false;
+
+    // Detect if the contract support manual mode. For this, resolveMode needs to be defined
+    // in the contract
+    let contractMode = 'auto'
+    // TODO : detection for manual
+
+    if(contractMode == 'auto') {
+      let pathnameParts = url.pathname.split('/')
+
+      contractMethodName = pathnameParts[1];
+
+      pathnameParts = pathnameParts.slice(2)
+      for(let i = 0; i < pathnameParts.length; i++) {
+        let argValue = pathnameParts[i]
+        let detectedType = null;
+
+        // If this is the last argument, extract the mime type right away
+        if(i == pathnameParts.length - 1) {
+          let argValueParts = argValue.split('.')
+          if(argValueParts > 1) {
+            let mimeType = mime.lookup(argValueParts[argValueParts.length - 1])
+            if(mimeType != false) {
+              contractReturnMimeType = mimeType
+              argValue = argValueParts.slice(0, -1).join('.')
+            }
+          }
+        }
+
+        // First we look for an explicit cast
+        for(j = 0; j < supportedTypes.length; j++) {
+          if(argValue.startsWith(supportedTypes[j].type + '!')) {
+            argValue = argValue.split('!').slice(1).join('!')
+            try {
+              argValue = await supportedTypes[j].parse(argValue)
+            }
+            catch(e) {
+              let output = '<html><head><meta charset="utf-8" /></head><body>Argument ' + i + ' was explicitely requested to be casted to ' + supportedTypes[j].type + ', but : ' + e + '</body></html>';
+              callback({ mimeType: 'text/html', data: output })
+              return;
+            }
+            detectedType = supportedTypes[j].type
+            break;
+          }
+        }
+
+        // Next, if no explicit cast, try to detect
+        if(detectedType == null) {
+          for(j = 0; j < supportedTypes.length; j++) {
+            if(supportedTypes[j].autoDetectable) {
+              try {
+                argValue = await supportedTypes[j].parse(argValue)
+                detectedType = supportedTypes[j].type
+              }
+              catch(e) {
+              }
+            }
+          }
+        }
+
+        // Finally, save the args and its type
+        contractMethodArgsDef.push({type: detectedType ? detectedType : "bytes"})
+        contractMethodArgs.push(argValue)
+      }
+
+      // Handle the return definition
+      let returnsParam = url.searchParams.get('returns')
+      if(returnsParam && returnsParam.length >= 2) {
+        // When we have a return definition, we returns everything as JSON
+        contractReturnJsonEncode = true;
+
+        returnsParamParts = returnsParam.substr(1, returnsParam.length - 2).split(',').map(returnType => returnType.trim()).filter(x => x != '')
+
+        if(returnsParamParts == 0) {
+          contractReturnDataTypes = [{type: 'bytes'}]
+        }
+        else {
+          contractReturnDataTypes = []
+          for(let i = 0; i < returnsParamParts.length; i++) {
+            contractReturnDataTypes.push({type: returnsParamParts[i]})
+          }
+        }
+      }
+    }
+
+
+
+    // Contract definition
+    let abi = [
+      {
+        inputs: contractMethodArgsDef,
+        name: contractMethodName,
+        // Assuming string output
+        outputs: contractReturnDataTypes,
+        stateMutability: 'view',
+        type: 'function',
+      },
+    ];
+    let contract = {
+      address: contractAddress,
+      abi: abi,
+    };
+
+
+    // Make the call!
+    let output = "";
+    try {
+      output = await client.readContract({
+        ...contract,
+        functionName: contractMethodName,
+        args: contractMethodArgs,
+      })
+    }
+    catch(err) {
+      output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';
+      callback({ mimeType: 'text/html', data: output })
+      return;
+    }
+
+    // Cast as json if requested
+    if(contractReturnJsonEncode) {
+      contractReturnMimeType = 'application/json'
+      output = JSON.stringify(output.map(x => "" + x))
+    }
+    // Default : Cast as string
+    else {
+      output = "" + output;
+    }
+
+    callback({ mimeType: contractReturnMimeType, data: output })
+  })
+
+  console.log('EVM protocol registered: ', result)
+}
+
+
+//
+// evm:// support
+//
 
 // Register and handle the evm:// protocol
 function registerEvmProtocol() {
@@ -153,7 +417,7 @@ function registerEvmProtocol() {
 
     // Contract name && chain : "<contractAddress>.<chainId>"
     // Web3 network : if provided in the URL, use it, or mainnet by default
-    let web3Url = null;
+    let web3ProviderUrl = null;
     let web3Chain = "mainnet";
     let contractAddress = "";
     let hostnameParts = url.hostname.split(".");
@@ -176,14 +440,14 @@ function registerEvmProtocol() {
         return;
       }
 
-      web3Url = args.web3Url
+      web3ProviderUrl = args.web3Url
       web3Chain = args.web3Chain ? args.web3Chain : "mainnet";
     }
 
     // Prepare the web3 client
     const client = createPublicClient({
       chain: web3Chains[web3Chain],
-      transport: http(web3Url),
+      transport: http(web3ProviderUrl),
     });
 
     // Contract address / ENS

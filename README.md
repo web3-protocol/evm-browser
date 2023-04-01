@@ -1,6 +1,6 @@
 # evm-browser
 
-Browser with support of the [EIP-4804 `web3://` protocol](https://eips.ethereum.org/EIPS/eip-4804), which allow you to display the contents returned by EVM contracts from any EVM chain. Only the "auto" mode is supported for now.
+Browser with support of the [EIP-4804 `web3://` protocol](https://eips.ethereum.org/EIPS/eip-4804), which allow you to display the contents returned by EVM contracts from any EVM chain.
 Browser forked from the great [electron-as-browser](https://github.com/hulufei/electron-as-browser) from hulufei. Experimental!
 
 ``web3://0x74CE1B659b9e16a8F4de0858C6f8794b78767615:5/``

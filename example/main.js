@@ -162,7 +162,7 @@ function registerWeb3Protocol() {
         autoDetectable: true,
         parse: async (x) => {
           x = parseInt(x)
-          if(x === Number.NaN) {
+          if(isNaN(x)) {
             throw new Error("Number is not parseable")
           }
           if(x < 0) {
@@ -191,7 +191,6 @@ function registerWeb3Protocol() {
           if(x.length == 22 && x.substr(0, 2) == '0x') {
             return x;
           }
-
           if(x.endsWith('.eth')) {
             let xAddress = await client.getEnsAddress({ name: x });
             if(xAddress == "0x0000000000000000000000000000000000000000") {
@@ -278,24 +277,25 @@ function registerWeb3Protocol() {
     if(contractMode == 'auto') {
       let pathnameParts = url.pathname.split('/')
 
+      // If the last pathname part contains a dot, assume an extension
+      // Try to extract the mime type
+      if(pathnameParts.length >= 2) {
+        let argValueParts = pathnameParts[pathnameParts.length - 1].split('.')
+        if(argValueParts.length > 1) {
+          let mimeType = mime.lookup(argValueParts[argValueParts.length - 1])
+          if(mimeType != false) {
+            contractReturnMimeType = mimeType
+            pathnameParts[pathnameParts.length - 1] = argValueParts.slice(0, -1).join('.')
+          }
+        }
+      }
+
       contractMethodName = pathnameParts[1];
 
       pathnameParts = pathnameParts.slice(2)
       for(let i = 0; i < pathnameParts.length; i++) {
         let argValue = pathnameParts[i]
         let detectedType = null;
-
-        // If this is the last argument, extract the mime type right away
-        if(i == pathnameParts.length - 1) {
-          let argValueParts = argValue.split('.')
-          if(argValueParts > 1) {
-            let mimeType = mime.lookup(argValueParts[argValueParts.length - 1])
-            if(mimeType != false) {
-              contractReturnMimeType = mimeType
-              argValue = argValueParts.slice(0, -1).join('.')
-            }
-          }
-        }
 
         // First we look for an explicit cast
         for(j = 0; j < supportedTypes.length; j++) {
@@ -321,6 +321,8 @@ function registerWeb3Protocol() {
               try {
                 argValue = await supportedTypes[j].parse(argValue)
                 detectedType = supportedTypes[j].type
+
+                break
               }
               catch(e) {
               }
@@ -352,7 +354,6 @@ function registerWeb3Protocol() {
         }
       }
     }
-
 
 
     // Contract definition
@@ -390,6 +391,9 @@ function registerWeb3Protocol() {
     // Cast as json if requested
     if(contractReturnJsonEncode) {
       contractReturnMimeType = 'application/json'
+      if((output instanceof Array) == false) {
+        output = [output]
+      }
       output = JSON.stringify(output.map(x => "" + x))
     }
     // Default : Cast as string
@@ -400,7 +404,7 @@ function registerWeb3Protocol() {
     callback({ mimeType: contractReturnMimeType, data: output })
   })
 
-  console.log('EVM protocol registered: ', result)
+  console.log('Web3 protocol registered: ', result)
 }
 
 

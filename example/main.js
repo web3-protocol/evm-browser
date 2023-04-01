@@ -4,11 +4,11 @@ const BrowserLikeWindow = require('../index');
 
 const yargs = require("yargs");
 const { createPublicClient, http } = require('viem');
-const web3Chains = require('viem/chains');
+let web3Chains = require('viem/chains');
 const { fetch } = require("undici");
 global.fetch = fetch;
 const fs = require('fs')
-var mime = require('mime-types')
+const mime = require('mime-types')
 
 let browser;
 
@@ -29,15 +29,32 @@ yargs
     alias: 'wc',
     type: 'string',
     defaultDescription: 'mainnet',
-    description: 'Web3 chain to use (' + Object.keys(web3Chains).join(', ') + ')'
+    description: 'Web3 chain to use (chain id or one of the following values: ' + Object.keys(web3Chains).join(', ') + ')'
   })
 let args = yargs.parse()
 
+// Chain is an id? Create a custom chain with his RPC URL
+if(args.web3Chain && parseInt(args.web3Chain) && args.web3Url) {
+  // Add the custom chain on the list
+  let key = 'custom-' + args.web3Chain
+  web3Chains[key] = {
+    id: parseInt(args.web3Chain),
+    name: key,
+    network: key,
+    rpcUrls: {
+      public: { http: [args.web3Url] },
+      default: { http: [args.web3Url] },
+    }
+  }
+
+  args.web3Chain = key;
+}
+// Check that chain name is defined
 if(args.web3Chain && web3Chains[args.web3Chain] === undefined) {
   console.log("Chain " + args.web3Chain + " is invalid");
   process.exit(1)
 }
-
+// If a web3Url is given, we require a chain name
 if(args.web3Url && args.web3Chain == null) {
   console.log("If specifying a web3 URL, you must specify the chain to use.");
   process.exit(1)

@@ -33,21 +33,26 @@ yargs
   })
 let args = yargs.parse()
 
-// Chain is an id? Create a custom chain with his RPC URL
-if(args.web3Chain && parseInt(args.web3Chain) && args.web3Url) {
-  // Add the custom chain on the list
-  let key = 'custom-' + args.web3Chain
-  web3Chains[key] = {
-    id: parseInt(args.web3Chain),
-    name: key,
-    network: key,
-    rpcUrls: {
-      public: { http: [args.web3Url] },
-      default: { http: [args.web3Url] },
-    }
+// Chain is an id? Find or create a custom chain with his RPC URL
+if(args.web3Chain && isNaN(parseInt(args.web3Chain)) == false && args.web3Url) {
+  if(Object.entries(web3Chains).filter(chain => chain[1].id == args.web3Chain).length == 1) {
+    args.web3Chain = Object.entries(web3Chains).filter(chain => chain[1].id == args.web3Chain)[0][0];
   }
+  else {
+    // Add the custom chain on the list
+    let key = 'custom-' + args.web3Chain
+    web3Chains[key] = {
+      id: parseInt(args.web3Chain),
+      name: key,
+      network: key,
+      rpcUrls: {
+        public: { http: [args.web3Url] },
+        default: { http: [args.web3Url] },
+      }
+    }
 
-  args.web3Chain = key;
+    args.web3Chain = key;
+  }
 }
 // Check that chain name is defined
 if(args.web3Chain && web3Chains[args.web3Chain] === undefined) {
@@ -239,7 +244,7 @@ function registerWeb3Protocol() {
     let web3ProviderUrl = null;
     let web3Chain = "mainnet";    
     // Was the network id specified?
-    if(parseInt(url.port) !== Number.NaN) {
+    if(isNaN(parseInt(url.port)) == false) {
       let web3ChainId = parseInt(url.port);
       if(web3ChainId && Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId).length == 1) {
         web3Chain = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)[0][0];

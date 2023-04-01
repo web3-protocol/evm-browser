@@ -1,7 +1,51 @@
 # evm-browser
 
-Browser with support of a new proposed `evm://` protocol scheme, which allow you to display the contents returned by EVM contracts from any EVM chain.
-Forked from the great [electron-as-browser](https://github.com/hulufei/electron-as-browser) from hulufei. Experimental!
+Browser with support of the [EIP-4804 `web3://` protocol](https://eips.ethereum.org/EIPS/eip-4804), which allow you to display the contents returned by EVM contracts from any EVM chain. Only the "auto" mode is supported for now.
+Browser forked from the great [electron-as-browser](https://github.com/hulufei/electron-as-browser) from hulufei. Experimental!
+
+Examples : 
+
+``web3://0x5a985f13345e820aa9618826b85f74c3986e1463:5/tokenHTML/2``
+
+Load the HTML representation of the Terraform token 2 deployed in the goerli network.
+
+``web3://0x5a985f13345e820aa9618826b85f74c3986e1463:5/tokenSVG/2.svg``
+
+Load the SVG representation of the Terraform token 2 deployed in the goerli network.
+
+``web3://0x76010876050387FA66E28a1883aD73d576D88Bf2:5/levelAndTile/2/50?returns=(uint256,uint256)``
+
+Returns 2 numbers from this contract method, whose arguments are 2 and 50.
+
+``web3://0x1f9840a85d5af5bf1d1762f925bdaddc4201f984/balanceOf/obok.eth?returns=(uint256)``
+
+Returns the USDC balance of obok.eth
+
+
+
+## Wallet support
+
+evm-browser also ships with [Frame.sh](https://frame.sh/) wallet and local node wallet support, which allows us to have a full read+write experience!
+
+This is thanks to [eth-provider](https://github.com/floating/eth-provider), which is exposed on ``window.ethereum``
+
+## Install
+
+`yarn install`
+
+`yarn start:setup`
+
+## Usage
+
+`yarn start`
+
+Use your own web3 provider : `yarn start --web3-url https://eth-mainnet.alchemyapi.io/v2/xxxxxx`
+
+Use your local evm node : `yarn start --web3-url http://127.0.0.1:8545`
+
+## evm:// protocol
+
+Previously, a custom-made ``evm://`` protocol was made up. Keeping it here for a while, will dissapear soon.
 
 Example : 
 
@@ -42,26 +86,3 @@ This call the levelAndTile method of the TerraformsData contract, which have 2 u
 ``evm://<contractAddress>[.<networkId>]/<path>?<arg1Name>=<argValue>[&...]``
 
 Not implemented yet.
-
-## Wallet support
-
-evm-browser also ships with [Frame.sh](https://frame.sh/) wallet and local node wallet support, which allows us to have a full read+write experience!
-
-This is thanks to [eth-provider](https://github.com/floating/eth-provider), which is exposed on ``window.ethereum``
-
-## Install
-
-`yarn install`
-
-`yarn start:setup`
-
-## Usage
-
-`yarn start`
-
-Use your own web3 provider : `yarn start --web3-url https://eth-mainnet.alchemyapi.io/v2/xxxxxx`
-
-Use your local evm node : `yarn start --web3-url http://127.0.0.1:8545`
-
-
-

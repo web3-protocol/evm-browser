@@ -52,7 +52,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: args._.length == 1 ? args._[0] : 'web3://0x539641f5110eCC0FbbBD5e784b3ef062963ee14B:5/indexHTML/1',
+    startPage: args._.length == 1 ? args._[0] : 'web3://0x74CE1B659b9e16a8F4de0858C6f8794b78767615:5/',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
     viewReferences: {
@@ -316,7 +316,7 @@ function registerWeb3Protocol() {
       try {
         let rawOutput = await client.call({
           to: contractAddress,
-          data: Buffer.from(callData).toString('hex')
+          data: "0x" + Buffer.from(callData).toString('hex')
         })
         output = Buffer.from(rawOutput.data.substr(2), "hex").toString().replace(/\0/g, '');
       }

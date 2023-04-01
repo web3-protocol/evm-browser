@@ -269,6 +269,12 @@ function registerWeb3Protocol() {
     let contractReturnJsonEncode = false;
     let output = '';
 
+    // If we have a web3 url without the initial "/", add it
+    // That is the behavior of browsers
+    if (url.pathname == "") {
+      url.pathname = "/"
+    }
+
     let pathnameParts = url.pathname.split('/')
 
     // If the last pathname part contains a dot, assume an extension

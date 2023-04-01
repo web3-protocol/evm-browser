@@ -3,7 +3,13 @@
 Browser with support of the [EIP-4804 `web3://` protocol](https://eips.ethereum.org/EIPS/eip-4804), which allow you to display the contents returned by EVM contracts from any EVM chain. Only the "auto" mode is supported for now.
 Browser forked from the great [electron-as-browser](https://github.com/hulufei/electron-as-browser) from hulufei. Experimental!
 
-Examples : 
+``web3://0x539641f5110eCC0FbbBD5e784b3ef062963ee14B:5/indexHTML/1``
+
+will load a goerli proof-of-concept "on-chain website" served by a smart contract and interacting with Terraforms (see contract on [etherscan](https://goerli.etherscan.io/address/0x539641f5110eCC0FbbBD5e784b3ef062963ee14B#code))
+
+![./screenshot2.png](./screenshot2.png)
+
+More examples : 
 
 ``web3://0x5a985f13345e820aa9618826b85f74c3986e1463:5/tokenHTML/2``
 
@@ -52,8 +58,6 @@ Example :
 ``evm://0xF311246e34cC59AdfaB6b9E486d18f67FB8C3e51.5/call/indexHTML(uint256)?arg=1``
 
 will load a goerli proof-of-concept "on-chain website" served by a smart contract and interacting with Terraforms (see contract on [etherscan](https://goerli.etherscan.io/address/0xF311246e34cC59AdfaB6b9E486d18f67FB8C3e51#code))
-
-![./screenshot2.png](./screenshot2.png)
 
 Since `evm://` is supported at the browser level, alls links, fetch() calls will work.
 

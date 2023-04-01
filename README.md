@@ -25,7 +25,7 @@ Returns 2 numbers from this contract method, whose arguments are 2 and 50.
 
 ``web3://0x1f9840a85d5af5bf1d1762f925bdaddc4201f984/balanceOf/obok.eth?returns=(uint256)``
 
-Returns the USDC balance of obok.eth
+Returns the Uniswap token balance of obok.eth
 
 
 

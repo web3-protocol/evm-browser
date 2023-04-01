@@ -324,6 +324,11 @@ function registerWeb3Protocol() {
           to: contractAddress,
           data: "0x" + Buffer.from(callData).toString('hex')
         })
+        // Looks like this is what happens when calling non-contracts
+        if(rawOutput.data === undefined) {
+          throw new Error("Looks like the address is not a contract.");
+        }
+
         output = Buffer.from(rawOutput.data.substr(2), "hex").toString().replace(/\0/g, '');
       }
       catch(err) {

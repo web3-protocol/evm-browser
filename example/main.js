@@ -3,7 +3,7 @@ const fileUrl = require('file-url');
 const BrowserLikeWindow = require('../index');
 
 const yargs = require("yargs");
-const { createPublicClient, http } = require('viem');
+const { createPublicClient, http, decodeAbiParameters } = require('viem');
 let web3Chains = require('viem/chains');
 const { fetch } = require("undici");
 global.fetch = fetch;
@@ -346,12 +346,19 @@ function registerWeb3Protocol() {
           to: contractAddress,
           data: "0x" + Buffer.from(callData).toString('hex')
         })
+        
         // Looks like this is what happens when calling non-contracts
         if(rawOutput.data === undefined) {
           throw new Error("Looks like the address is not a contract.");
         }
 
-        output = Buffer.from(rawOutput.data.substr(2), "hex").toString().replace(/\0/g, '');
+        rawOutput = decodeAbiParameters([
+            { type: 'bytes' },
+          ],
+          rawOutput.data,
+        )
+
+        output = Buffer.from(rawOutput[0].substr(2), "hex").toString().replace(/\0/g, '');
       }
       catch(err) {
         output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';

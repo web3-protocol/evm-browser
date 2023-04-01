@@ -156,6 +156,7 @@ protocol.registerSchemesAsPrivileged([
 function registerWeb3Protocol() {
   // Register protocol
   let result = protocol.registerStringProtocol("web3", async (request, callback) => {
+    // The supported types in arguments
     let supportedTypes = [
       {
         type: 'uint256',
@@ -262,33 +263,74 @@ function registerWeb3Protocol() {
     // 2 modes :
     // - Auto : we parse the path and arguments and send them
     // - Manual : we forward all the path & arguments as calldata
-    let contractMethodName = '';
-    let contractMethodArgsDef = [];
-    let contractMethodArgs = [];
+    let contractMode = 'auto'
     let contractReturnDataTypes = [{type: 'string'}];
     let contractReturnMimeType = 'text/html';
     let contractReturnJsonEncode = false;
+    let output = '';
 
-    // Detect if the contract support manual mode. For this, resolveMode needs to be defined
-    // in the contract
-    let contractMode = 'auto'
-    // TODO : detection for manual
+    let pathnameParts = url.pathname.split('/')
 
-    if(contractMode == 'auto') {
-      let pathnameParts = url.pathname.split('/')
-
-      // If the last pathname part contains a dot, assume an extension
-      // Try to extract the mime type
-      if(pathnameParts.length >= 2) {
-        let argValueParts = pathnameParts[pathnameParts.length - 1].split('.')
-        if(argValueParts.length > 1) {
-          let mimeType = mime.lookup(argValueParts[argValueParts.length - 1])
-          if(mimeType != false) {
-            contractReturnMimeType = mimeType
-            pathnameParts[pathnameParts.length - 1] = argValueParts.slice(0, -1).join('.')
-          }
+    // If the last pathname part contains a dot, assume an extension
+    // Try to extract the mime type
+    if(pathnameParts.length >= 2) {
+      let argValueParts = pathnameParts[pathnameParts.length - 1].split('.')
+      if(argValueParts.length > 1) {
+        let mimeType = mime.lookup(argValueParts[argValueParts.length - 1])
+        if(mimeType != false) {
+          contractReturnMimeType = mimeType
+          pathnameParts[pathnameParts.length - 1] = argValueParts.slice(0, -1).join('.')
         }
       }
+    }
+
+    // Detect if the contract is manual mode : resolveMode must returns "manual"
+    try {
+      let resolveMode = await client.readContract({
+        address: contractAddress,
+        abi: [{
+          inputs: [],
+          name: 'resolveMode',
+          outputs: [{type: 'bytes32'}],
+          stateMutability: 'view',
+          type: 'function',
+        }],
+        functionName: 'resolveMode',
+        args: [],
+      })
+      let resolveModeAsString = Buffer.from(resolveMode.substr(2), "hex").toString().replace(/\0/g, '');
+      if(resolveModeAsString == "manual") {
+        contractMode = 'manual';
+      }
+    }
+    catch(err) {}
+    // Detect if the call to the auto contract is manual : if only "/" is called
+    if(contractMode == "auto" && pathnameParts[1] == "") {
+      contractMode = "manual";
+    }
+
+
+    // Process a manual mode call
+    if(contractMode == 'manual') {
+      let callData = url.pathname + (Array.from(url.searchParams.values()).length > 0 ? "?" + url.searchParams : "");
+      try {
+        let rawOutput = await client.call({
+          to: contractAddress,
+          data: Buffer.from(callData).toString('hex')
+        })
+        output = Buffer.from(rawOutput.data.substr(2), "hex").toString().replace(/\0/g, '');
+      }
+      catch(err) {
+        output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';
+        callback({ mimeType: 'text/html', data: output })
+        return;
+      }
+    }
+    // Process a auto mode call
+    else {
+      let contractMethodName = '';
+      let contractMethodArgsDef = [];
+      let contractMethodArgs = [];
 
       contractMethodName = pathnameParts[1];
 
@@ -305,7 +347,7 @@ function registerWeb3Protocol() {
               argValue = await supportedTypes[j].parse(argValue)
             }
             catch(e) {
-              let output = '<html><head><meta charset="utf-8" /></head><body>Argument ' + i + ' was explicitely requested to be casted to ' + supportedTypes[j].type + ', but : ' + e + '</body></html>';
+              output = '<html><head><meta charset="utf-8" /></head><body>Argument ' + i + ' was explicitely requested to be casted to ' + supportedTypes[j].type + ', but : ' + e + '</body></html>';
               callback({ mimeType: 'text/html', data: output })
               return;
             }
@@ -353,40 +395,41 @@ function registerWeb3Protocol() {
           }
         }
       }
+
+
+      // Contract definition
+      let abi = [
+        {
+          inputs: contractMethodArgsDef,
+          name: contractMethodName,
+          // Assuming string output
+          outputs: contractReturnDataTypes,
+          stateMutability: 'view',
+          type: 'function',
+        },
+      ];
+      let contract = {
+        address: contractAddress,
+        abi: abi,
+      };
+
+      // Make the call!
+      try {
+        output = await client.readContract({
+          ...contract,
+          functionName: contractMethodName,
+          args: contractMethodArgs,
+        })
+      }
+      catch(err) {
+        output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';
+        callback({ mimeType: 'text/html', data: output })
+        return;
+      }
     }
 
 
-    // Contract definition
-    let abi = [
-      {
-        inputs: contractMethodArgsDef,
-        name: contractMethodName,
-        // Assuming string output
-        outputs: contractReturnDataTypes,
-        stateMutability: 'view',
-        type: 'function',
-      },
-    ];
-    let contract = {
-      address: contractAddress,
-      abi: abi,
-    };
 
-
-    // Make the call!
-    let output = "";
-    try {
-      output = await client.readContract({
-        ...contract,
-        functionName: contractMethodName,
-        args: contractMethodArgs,
-      })
-    }
-    catch(err) {
-      output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';
-      callback({ mimeType: 'text/html', data: output })
-      return;
-    }
 
     // Cast as json if requested
     if(contractReturnJsonEncode) {

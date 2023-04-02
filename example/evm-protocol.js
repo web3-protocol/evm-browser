@@ -153,6 +153,8 @@ const registerEvmProtocol = (args, web3Chains) => {
 
     callback({ mimeType: contractReturnMimeType, data: "" + output })
   })
+
+  console.log('Evm protocol registered: ', result)
 }
 
 module.exports = { registerEvmProtocol }

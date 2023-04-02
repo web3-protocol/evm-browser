@@ -1,5 +1,6 @@
 const { protocol } = require('electron');
 const { createPublicClient, http, decodeAbiParameters } = require('viem');
+const { normalize: ensNormalize } = require('viem/ens')
 const mime = require('mime-types')
 
 //
@@ -7,6 +8,53 @@ const mime = require('mime-types')
 //
 
 const registerWeb3Protocol = (args, web3Chains) => {
+
+  //
+  // Domain name handling
+  // Assumption : all domain names are resolving on ethereum mainnet
+  //
+
+  // Is it a supported domain name? (ENS, ...)
+  const isSupportedDomainName = (domainName) => {
+    return typeof domainName == 'string' && domainName.endsWith('.eth');
+  }
+
+  // A mainnet client only for domain name resolution
+  const domainNameResolutionClient = createPublicClient({ 
+    chain: web3Chains.mainnet,
+    transport: http()
+  })
+  // Attempt resolution of the domain name
+  // Must return an exception if failure
+  const resolveDomainName = async (domainName) => {
+    // ENS
+    if(domainName.endsWith('.eth')) {
+      let address = await domainNameResolutionClient.getEnsAddress({ name: ensNormalize(domainName) });
+      if(address == "0x0000000000000000000000000000000000000000") {
+        throw new Error("Unable to resolve the argument as an ethereum .eth address")
+      }
+      return address;
+    }
+
+    throw new Error('Unrecognized domain name : ' + domainName)
+  }
+
+  // Follow EIP-4804 standard : if there is a web3 TXT record with a EIP-3770 address, 
+  // then go there. Otherwise, go to the resolved address.
+  const resolveDomainNameForEIP4804 = async (domainName) => {
+    // TODO : fetch TXT record. Pull request incoming on viem.sh (not from me)
+
+    // TODO : Returns 2 arguments : address and chain id to switch to.
+    // Awaiting clarification from Qi Zhou
+
+    // Default : return resolved domain name
+    return resolveDomainName(domainName);
+  }
+
+
+  //
+  // web3:// call handling
+  //
 
   let result = protocol.registerStringProtocol("web3", async (request, callback) => {
     // The supported types in arguments
@@ -45,12 +93,10 @@ const registerWeb3Protocol = (args, web3Chains) => {
           if(x.length == 22 && x.substr(0, 2) == '0x') {
             return x;
           }
-          if(x.endsWith('.eth')) {
-            let xAddress = await client.getEnsAddress({ name: x });
-            if(xAddress == "0x0000000000000000000000000000000000000000") {
-              throw new Error("Unable to resolve the argument as an ethereum .eth address")
-            }
-            return xAddress
+          if(isSupportedDomainName(x)) {
+            // Will throw an error if failure
+            let xAddress = await resolveDomainName(x);
+            return xAddress;
           }
 
           throw new Error("Unrecognized address")
@@ -102,11 +148,12 @@ const registerWeb3Protocol = (args, web3Chains) => {
 
     // Contract address / ENS
     let contractAddress = url.hostname;
-    if(contractAddress.endsWith('.eth')) {
-      let contractEnsName = contractAddress;
-      contractAddress = await client.getEnsAddress({ name: contractEnsName });
-      if(contractAddress == "0x0000000000000000000000000000000000000000") {
-        let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve ENS ' + contractEnsName + '</body></html>';
+    if(isSupportedDomainName(contractAddress)) {
+      try {
+        contractAddress = await resolveDomainNameForEIP4804(contractAddress)
+      }
+      catch(err) {
+        let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve domain name ' + contractAddress + '</body></html>';
         callback({ mimeType: 'text/html', data: output })
         return;
       }
@@ -315,6 +362,8 @@ const registerWeb3Protocol = (args, web3Chains) => {
 
     callback({ mimeType: contractReturnMimeType, data: output })
   })
+
+  console.log('Web3 protocol registered: ', result)
 }
 
 module.exports = { registerWeb3Protocol }

@@ -115,6 +115,13 @@ function Control() {
     if (!/^.*?:\/\//.test(v)) {
       href = `http://${v}`;
     }
+
+    // If we have a web3 url without the initial "/", add it
+    // Otherwise break host relative links
+    if (/^web3:\/\/[^\/]+$/.test(href)) {
+      href = href + "/"
+    }
+
     action.sendEnterURL(href);
   };
   const close = (e, id) => {

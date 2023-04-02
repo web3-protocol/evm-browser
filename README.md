@@ -45,6 +45,8 @@ This is thanks to [eth-provider](https://github.com/floating/eth-provider), whic
 
 `yarn start`
 
+By default it will use the ethereum providers embedded with the [viem.sh](https://viem.sh) library.
+
 Use your own web3 provider : `yarn start --web3-url https://eth-mainnet.alchemyapi.io/v2/xxxxxx`
 
 Use your local evm node : `yarn start --web3-url http://127.0.0.1:8545`

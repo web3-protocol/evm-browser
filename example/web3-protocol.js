@@ -7,7 +7,7 @@ const mime = require('mime-types')
 // EIP-4808 web3:// protocol
 //
 
-const registerWeb3Protocol = (args, web3Chains) => {
+const registerWeb3Protocol = (web3Chains) => {
 
   //
   // Domain name handling
@@ -126,18 +126,6 @@ const registerWeb3Protocol = (args, web3Chains) => {
       if(web3ChainId && Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId).length == 1) {
         web3Chain = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)[0][0];
       }
-    }
-    // If the network was specified by CLI:
-    // The requested chain in the URL must match the one from the CLI
-    if(args.web3Chain) {
-      if(args.web3Chain != web3Chain) {
-        let output = '<html><head><meta charset="utf-8" /></head><body>The requested chain is ' + web3Chain + ' but the browser was started with the chain forced to ' + args.web3Chain + '</body></html>';
-        callback({ mimeType: 'text/html', data: output })
-        return;
-      }
-
-      web3ProviderUrl = args.web3Url
-      web3Chain = args.web3Chain ? args.web3Chain : "mainnet";
     }
 
     // Prepare the web3 client

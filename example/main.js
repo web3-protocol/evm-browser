@@ -2,8 +2,8 @@ const { app, protocol, ipcMain } = require('electron');
 const fileUrl = require('file-url');
 const BrowserLikeWindow = require('../index');
 
-const yargs = require("yargs");
 let web3Chains = require('viem/chains');
+const yargs = require("yargs");
 const { fetch } = require("undici");
 global.fetch = fetch;
 const fs = require('fs')
@@ -20,51 +20,56 @@ let browser;
 
 yargs
   .usage("evm-browser <start-url> [options]")
-  .option('web3-url', {
-    alias: 'wu',
-    type: 'string',
-    default: null,
-    description: 'URL of a web3 provider (https://eth-mainnet.alchemyapi.io/v2/xxxx, http://127.0.0.1:8545, ...)'
-  })
   .option('web3-chain', {
     alias: 'wc',
     type: 'string',
-    defaultDescription: 'mainnet',
-    description: 'Web3 chain to use (chain id or one of the following values: ' + Object.keys(web3Chains).join(', ') + ')'
+    description: "Add/override a chain definition\nFormat: <chain-id>=<rpc-provider-url> \nMultiple can be provided with multiple --web3-chain use. Override existing chain settings. Examples:\n1=https://eth-mainnet.alchemyapi.io/v2/xxxx\n42170=https://nova.arbitrum.io/rpc\n 5=http://127.0.0.1:8545\n\nNatively supported chains : " + Object.keys(web3Chains).join(', ')
   })
 let args = yargs.parse()
 
-// Chain is an id? Find or create a custom chain with his RPC URL
-if(args.web3Chain && isNaN(parseInt(args.web3Chain)) == false && args.web3Url) {
-  if(Object.entries(web3Chains).filter(chain => chain[1].id == args.web3Chain).length == 1) {
-    args.web3Chain = Object.entries(web3Chains).filter(chain => chain[1].id == args.web3Chain)[0][0];
+// Add/override chain definitions
+if(args.web3Chain) {
+  if((args.web3Chain instanceof Array) == false) {
+    args.web3Chain = [args.web3Chain]
   }
-  else {
-    // Add the custom chain on the list
-    let key = 'custom-' + args.web3Chain
-    web3Chains[key] = {
-      id: parseInt(args.web3Chain),
-      name: key,
-      network: key,
-      rpcUrls: {
-        public: { http: [args.web3Url] },
-        default: { http: [args.web3Url] },
+
+  args.web3Chain.map(newChain => newChain.split('=')).map(newChainComponents => {
+    if(newChainComponents.length <= 1) {
+      console.log("Chain format is invalid");
+      process.exit(1)
+    }
+    let chainId = parseInt(newChainComponents[0]);
+    if(isNaN(chainId) || chainId <= 0) {
+      console.log("Chain id is invalid");
+      process.exit(1)
+    }
+    let chainRpcUrl = newChainComponents.slice(1).join("=");
+
+    // Check if chain already defined
+    let alreadyDefinedChains = Object.entries(web3Chains).filter(chain => chain[1].id == chainId)
+    if(alreadyDefinedChains.length == 1) {
+      let chainKey = alreadyDefinedChains[0][0];
+      web3Chains[chainKey].rpcUrls.default.http = [chainRpcUrl]
+      web3Chains[chainKey].rpcUrls.default.webSocket = undefined
+      web3Chains[chainKey].rpcUrls.public.http = [chainRpcUrl]
+      web3Chains[chainKey].rpcUrls.public.webSocket = undefined
+    }
+    else {
+      // Add the custom chain on the list
+      let key = 'custom-' + chainId
+      web3Chains[key] = {
+        id: parseInt(chainId),
+        name: key,
+        network: key,
+        rpcUrls: {
+          public: { http: [chainRpcUrl] },
+          default: { http: [chainRpcUrl] },
+        }
       }
     }
+  })
+}
 
-    args.web3Chain = key;
-  }
-}
-// Check that chain name is defined
-if(args.web3Chain && web3Chains[args.web3Chain] === undefined) {
-  console.log("Chain " + args.web3Chain + " is invalid");
-  process.exit(1)
-}
-// If a web3Url is given, we require a chain name
-if(args.web3Url && args.web3Chain == null) {
-  console.log("If specifying a web3 URL, you must specify the chain to use.");
-  process.exit(1)
-}
 
 
 //
@@ -96,9 +101,9 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 app.on('ready', async () => {
-  registerWeb3Protocol(args, web3Chains);
+  registerWeb3Protocol(web3Chains);
   // To be removed later
-  registerEvmProtocol(args, web3Chains);
+  registerEvmProtocol(web3Chains);
 
   createWindow();
 });

@@ -7,7 +7,7 @@ const mime = require('mime-types')
 //
 
 // Register and handle the evm:// protocol
-const registerEvmProtocol = (args, web3Chains) => {
+const registerEvmProtocol = (web3Chains) => {
   // Register protocol
   let result = protocol.registerStringProtocol("evm", async (request, callback) => {
 
@@ -29,18 +29,6 @@ const registerEvmProtocol = (args, web3Chains) => {
     }
     // Build back the address (which can be ENS)
     contractAddress = hostnameParts.join('.');
-    // If the network was specified by CLI:
-    // The requested chain in the URL must match the one from the CLI
-    if(args.web3Chain) {
-      if(args.web3Chain != web3Chain) {
-        let output = '<html><head><meta charset="utf-8" /></head><body>The requested chain is ' + web3Chain + ' but the browser was started with the chain forced to ' + args.web3Chain + '</body></html>';
-        callback({ mimeType: 'text/html', data: output })
-        return;
-      }
-
-      web3ProviderUrl = args.web3Url
-      web3Chain = args.web3Chain ? args.web3Chain : "mainnet";
-    }
 
     // Prepare the web3 client
     const client = createPublicClient({

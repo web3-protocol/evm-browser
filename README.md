@@ -47,9 +47,11 @@ This is thanks to [eth-provider](https://github.com/floating/eth-provider), whic
 
 By default it will use the ethereum providers embedded with the [viem.sh](https://viem.sh) library.
 
-Use your own web3 provider : `yarn start --web3-url https://eth-mainnet.alchemyapi.io/v2/xxxxxx`
+Use your own web3 provider for mainnet : `yarn start --web3-chain 1=https://eth-mainnet.alchemyapi.io/v2/xxxxxx`
 
-Use your local evm node : `yarn start --web3-url http://127.0.0.1:8545`
+Use your local evm node for goerli : `yarn start --web3-chain 5=http://127.0.0.1:8545`
+
+Add or override multiple chains : `yarn start --web3-chain 42170=https://nova.arbitrum.io/rpc --web3-chain 5=http://127.0.0.1:8545`
 
 ## evm:// protocol
 

@@ -80,7 +80,7 @@ function createWindow() {
   browser = new BrowserLikeWindow({
     controlHeight: 99,
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
-    startPage: args._.length == 1 ? args._[0] : 'web3://0xA66556f4DB239E713491859258E577f25510eFd6:5/',
+    startPage: args._.length == 1 ? args._[0] : 'web3://terraformnavigator.eth/',
     blankTitle: 'New tab',
     debug: true, // will open controlPanel's devtools
     viewReferences: {

@@ -227,13 +227,11 @@ const registerWeb3Protocol = (web3Chains) => {
           throw new Error("Looks like the address is not a contract.");
         }
 
-        // rawOutput = decodeAbiParameters([
-        //     { type: 'bytes' },
-        //   ],
-        //   rawOutput.data,
-        // )
-        // Temp while we clarify the need of abi encode return of the manual mode fallback method
-        rawOutput = [rawOutput.data];
+        rawOutput = decodeAbiParameters([
+            { type: 'bytes' },
+          ],
+          rawOutput.data,
+        )
 
         output = Buffer.from(rawOutput[0].substr(2), "hex").toString().replace(/\0/g, '');
       }

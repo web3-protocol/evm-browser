@@ -81,8 +81,6 @@ class BrowserLikeWindow extends EventEmitter {
       webPreferences: {
         contextIsolation: false,
         nodeIntegration: true,
-        // Allow loadURL with file path in dev environment
-        webSecurity: false,
         ...controlReferences
       }
     });
@@ -128,9 +126,9 @@ class BrowserLikeWindow extends EventEmitter {
         this.loadURL(url);
       },
       act: (e, actName) => webContentsAct(actName),
-      'new-tab': (e, url, references) => {
+      'new-tab': (e, url) => {
         log.debug('new-tab with url', url);
-        this.newTab(url, undefined, references);
+        this.newTab(url);
       },
       'switch-tab': (e, id) => {
         this.switchTab(id);
@@ -375,13 +373,13 @@ class BrowserLikeWindow extends EventEmitter {
    *
    * @fires BrowserLikeWindow#new-tab
    */
-  newTab(url, appendTo, references) {
+  newTab(url, appendTo) {
     const view = new BrowserView({
       webPreferences: {
         // Set sandbox to support window.opener
         // See: https://github.com/electron/electron/issues/1865#issuecomment-249989894
         sandbox: true,
-        ...(references || this.options.viewReferences)
+        ...(this.options.viewReferences)
       }
     });
 

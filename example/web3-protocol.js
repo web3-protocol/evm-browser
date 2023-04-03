@@ -6,6 +6,7 @@ const mime = require('mime-types')
 // const {chains: ethChainsPkgWeb3Chains } = require('eth-chains')
 // Temporary until the above package has auto-update activated (looks like it is coming very soon)
 const chainsJsonFileChans = require('./web3-chains.js')
+const { PassThrough } = require('stream')
 
 //
 // EIP-4808 web3:// protocol
@@ -102,7 +103,7 @@ const registerWeb3Protocol = (web3Chains) => {
   // web3:// call handling
   //
 
-  let result = protocol.registerStringProtocol("web3", async (request, callback) => {
+  let result = protocol.registerStreamProtocol("web3", async (request, callback) => {
     // The supported types in arguments
     let supportedTypes = [
       {
@@ -295,7 +296,7 @@ const registerWeb3Protocol = (web3Chains) => {
           rawOutput.data,
         )
 
-        output = Buffer.from(rawOutput[0].substr(2), "hex").toString().replace(/\0/g, '');
+        output = Buffer.from(rawOutput[0].substr(2), "hex")
       }
       catch(err) {
         output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';
@@ -414,12 +415,13 @@ const registerWeb3Protocol = (web3Chains) => {
       }
       output = JSON.stringify(output.map(x => "" + x))
     }
-    // Default : Cast as string
-    else {
-      output = "" + output;
-    }
 
-    callback({ mimeType: contractReturnMimeType, data: output })
+    // ReadableStream
+    const stream = new PassThrough()
+    stream.push(output)
+    stream.push(null)
+
+    callback({ mimeType: contractReturnMimeType, data: stream })
   })
 
   console.log('Web3 protocol registered: ', result)

@@ -15,21 +15,18 @@ const registerWeb3Protocol = (web3Chains) => {
   //
 
   // Is it a supported domain name? (ENS, ...)
-  const isSupportedDomainName = (domainName) => {
-    return typeof domainName == 'string' && domainName.endsWith('.eth');
+  const isSupportedDomainName = (domainName, web3chain) => {
+    return typeof domainName == 'string' && 
+      // ENS is supported on mainnet, goerli and sepolia
+      domainName.endsWith('.eth') && [1, 5, 11155111].includes(web3chain.id);
   }
 
-  // A mainnet client only for domain name resolution
-  const domainNameResolutionClient = createPublicClient({ 
-    chain: web3Chains.mainnet,
-    transport: http()
-  })
   // Attempt resolution of the domain name
   // Must return an exception if failure
-  const resolveDomainName = async (domainName) => {
+  const resolveDomainName = async (domainName, web3Client) => {
     // ENS
     if(domainName.endsWith('.eth')) {
-      let address = await domainNameResolutionClient.getEnsAddress({ name: ensNormalize(domainName) });
+      let address = await web3Client.getEnsAddress({ name: ensNormalize(domainName) });
       if(address == "0x0000000000000000000000000000000000000000") {
         throw new Error("Unable to resolve the argument as an ethereum .eth address")
       }
@@ -41,14 +38,14 @@ const registerWeb3Protocol = (web3Chains) => {
 
   // Follow EIP-4804 standard : if there is a web3 TXT record with a EIP-3770 address, 
   // then go there. Otherwise, go to the resolved address.
-  const resolveDomainNameForEIP4804 = async (domainName) => {
+  const resolveDomainNameForEIP4804 = async (domainName, web3Client) => {
     // TODO : fetch TXT record. Pull request incoming on viem.sh (not from me)
 
     // TODO : Returns 2 arguments : address and chain id to switch to.
     // Awaiting clarification from Qi Zhou
 
     // Default : return resolved domain name
-    return resolveDomainName(domainName);
+    return resolveDomainName(domainName, web3Client);
   }
 
 
@@ -62,7 +59,7 @@ const registerWeb3Protocol = (web3Chains) => {
       {
         type: 'uint256',
         autoDetectable: true,
-        parse: async (x) => {
+        parse: async (x, web3Client) => {
           x = parseInt(x)
           if(isNaN(x)) {
             throw new Error("Number is not parseable")
@@ -76,7 +73,7 @@ const registerWeb3Protocol = (web3Chains) => {
       {
         type: 'bytes32',
         autoDetectable: true,
-        parse: async (x) => {
+        parse: async (x, web3Client) => {
           if(x.length != 34) {
             throw new Error("Bad length (must include 0x in front)")
           }
@@ -89,13 +86,13 @@ const registerWeb3Protocol = (web3Chains) => {
       {
         type: 'address',
         autoDetectable: true,
-        parse: async (x) => {
+        parse: async (x, web3Client) => {
           if(x.length == 22 && x.substr(0, 2) == '0x') {
             return x;
           }
-          if(isSupportedDomainName(x)) {
+          if(isSupportedDomainName(x, web3Client.chain)) {
             // Will throw an error if failure
-            let xAddress = await resolveDomainName(x);
+            let xAddress = await resolveDomainName(x, web3Client);
             return xAddress;
           }
 
@@ -105,12 +102,12 @@ const registerWeb3Protocol = (web3Chains) => {
       {
         type: 'bytes',
         autoDetectable: false,
-        parse: async (x) => x,
+        parse: async (x, web3Client) => x,
       },
       {
         type: 'string',
         autoDetectable: false,
-        parse: async (x) => x,
+        parse: async (x, web3Client) => x,
       },
     ];
 
@@ -118,30 +115,42 @@ const registerWeb3Protocol = (web3Chains) => {
     let url = new URL(request.url);
 
     // Web3 network : if provided in the URL, use it, or mainnet by default
-    let web3ProviderUrl = null;
-    let web3Chain = "mainnet";    
+    let web3ChainName = "mainnet";  
     // Was the network id specified?
     if(isNaN(parseInt(url.port)) == false) {
       let web3ChainId = parseInt(url.port);
-      if(web3ChainId && Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId).length == 1) {
-        web3Chain = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)[0][0];
+      // Find the matching chain
+      let matchingChains = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)
+      if(matchingChains.length == 0) {
+        let output = '<html><head><meta charset="utf-8" /></head><body>No chain found for id ' + web3ChainId + '</body></html>';
+        callback({ mimeType: 'text/html', data: output })
+        return;        
       }
+      web3ChainName = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)[0][0];
     }
+    let web3chain = web3Chains[web3ChainName];
 
     // Prepare the web3 client
-    const client = createPublicClient({
-      chain: web3Chains[web3Chain],
-      transport: http(web3ProviderUrl),
+    const web3Client = createPublicClient({
+      chain: web3chain,
+      transport: http(),
     });
 
-    // Contract address / ENS
+    // Contract address / Domain name
     let contractAddress = url.hostname;
-    if(isSupportedDomainName(contractAddress)) {
-      try {
-        contractAddress = await resolveDomainNameForEIP4804(contractAddress)
+    if(/^0x[0-9a-fA-F]{40}/.test(contractAddress) == false) {
+      if(isSupportedDomainName(contractAddress, web3chain)) {
+        try {
+          contractAddress = await resolveDomainNameForEIP4804(contractAddress, web3Client)
+        }
+        catch(err) {
+          let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve domain name ' + contractAddress + '</body></html>';
+          callback({ mimeType: 'text/html', data: output })
+          return;
+        }
       }
-      catch(err) {
-        let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve domain name ' + contractAddress + '</body></html>';
+      else {
+        let output = '<html><head><meta charset="utf-8" /></head><body>Unresolvable domain name : ' + contractAddress + ' : no supported resolvers found in this chain</body></html>';
         callback({ mimeType: 'text/html', data: output })
         return;
       }
@@ -180,7 +189,7 @@ const registerWeb3Protocol = (web3Chains) => {
 
     // Detect if the contract is manual mode : resolveMode must returns "manual"
     try {
-      let resolveMode = await client.readContract({
+      let resolveMode = await web3Client.readContract({
         address: contractAddress,
         abi: [{
           inputs: [],
@@ -208,7 +217,7 @@ const registerWeb3Protocol = (web3Chains) => {
     if(contractMode == 'manual') {
       let callData = url.pathname + (Array.from(url.searchParams.values()).length > 0 ? "?" + url.searchParams : "");
       try {
-        let rawOutput = await client.call({
+        let rawOutput = await web3Client.call({
           to: contractAddress,
           data: "0x" + Buffer.from(callData).toString('hex')
         })
@@ -252,7 +261,7 @@ const registerWeb3Protocol = (web3Chains) => {
           if(argValue.startsWith(supportedTypes[j].type + '!')) {
             argValue = argValue.split('!').slice(1).join('!')
             try {
-              argValue = await supportedTypes[j].parse(argValue)
+              argValue = await supportedTypes[j].parse(argValue, web3Client)
             }
             catch(e) {
               output = '<html><head><meta charset="utf-8" /></head><body>Argument ' + i + ' was explicitely requested to be casted to ' + supportedTypes[j].type + ', but : ' + e + '</body></html>';
@@ -269,7 +278,7 @@ const registerWeb3Protocol = (web3Chains) => {
           for(j = 0; j < supportedTypes.length; j++) {
             if(supportedTypes[j].autoDetectable) {
               try {
-                argValue = await supportedTypes[j].parse(argValue)
+                argValue = await supportedTypes[j].parse(argValue, web3Client)
                 detectedType = supportedTypes[j].type
 
                 break
@@ -323,7 +332,7 @@ const registerWeb3Protocol = (web3Chains) => {
 
       // Make the call!
       try {
-        output = await client.readContract({
+        output = await web3Client.readContract({
           ...contract,
           functionName: contractMethodName,
           args: contractMethodArgs,

@@ -2,6 +2,10 @@ const { protocol } = require('electron');
 const { createPublicClient, http, decodeAbiParameters } = require('viem');
 const { normalize: ensNormalize } = require('viem/ens')
 const mime = require('mime-types')
+// We need that only for the short-name -> id mapping, for the resolution of EIP-3770 address
+// const {chains: ethChainsPkgWeb3Chains } = require('eth-chains')
+// Temporary until the above package has auto-update activated (looks like it is coming very soon)
+const chainsJsonFileChans = require('./web3-chains.js')
 
 //
 // EIP-4808 web3:// protocol
@@ -36,16 +40,61 @@ const registerWeb3Protocol = (web3Chains) => {
     throw new Error('Unrecognized domain name : ' + domainName)
   }
 
-  // Follow EIP-4804 standard : if there is a web3 TXT record with a EIP-3770 address, 
+  // Follow EIP-4804 standard : if there is a web3 TXT record with a common or EIP-3770 address, 
   // then go there. Otherwise, go to the resolved address.
   const resolveDomainNameForEIP4804 = async (domainName, web3Client) => {
-    // TODO : fetch TXT record. Pull request incoming on viem.sh (not from me)
+    let result = {
+      address: null,
+      chainId: null,
+    };
 
-    // TODO : Returns 2 arguments : address and chain id to switch to.
-    // Awaiting clarification from Qi Zhou
+    // ENS
+    if(domainName.endsWith('.eth')) {
+      // Get the web3 TXT record
+      const web3Txt = await web3Client.getEnsText({
+        name: ensNormalize(domainName),
+        key: 'web3',
+      })
 
-    // Default : return resolved domain name
-    return resolveDomainName(domainName, web3Client);
+      // web3 TXT case
+      if(web3Txt) {
+        let web3TxtParts = web3Txt.split(':');
+        // Simple address?
+        if(web3TxtParts.length == 1) {
+          if(/^0x[0-9a-fA-F]{40}/.test(web3Txt) == false) {
+            throw new Error("Invalid address in web3 TXT record")
+          }
+          result.address = web3Txt;
+        }
+        // EIP-3770 address
+        else if(web3TxtParts.length == 2) {
+          // Search the chain by its chain short name
+          let chainByShortName = Object.values(chainsJsonFileChans).find(chain => chain.shortName == web3TxtParts[0]) || null
+          if(chainByShortName == null) {
+            throw new Error("The chain short name of the web3 TXT record was not found")
+          }
+          if(/^0x[0-9a-fA-F]{40}/.test(web3TxtParts[1]) == false) {
+            throw new Error("Invalid address in web3 TXT record")
+          }
+          result.chainId = chainByShortName.chainId
+          result.address = web3TxtParts[1]
+        }
+        // Mistake
+        else {
+          throw new Error("Invalid address in web3 TXT record")
+        }
+      }
+      // No web3 TXT
+      else {
+        result.address = await resolveDomainName(domainName, web3Client);
+      }
+    }
+    // All other domains
+    else {
+      result.address = await resolveDomainName(domainName, web3Client);
+    }
+
+    return result;
   }
 
 
@@ -115,40 +164,53 @@ const registerWeb3Protocol = (web3Chains) => {
     let url = new URL(request.url);
 
     // Web3 network : if provided in the URL, use it, or mainnet by default
-    let web3ChainName = "mainnet";  
+    let web3chain = web3Chains["mainnet"];
     // Was the network id specified?
     if(isNaN(parseInt(url.port)) == false) {
       let web3ChainId = parseInt(url.port);
       // Find the matching chain
-      let matchingChains = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)
-      if(matchingChains.length == 0) {
+      web3chain = Object.values(web3Chains).find(chain => chain.id == web3ChainId)
+      if(web3chain == null) {
         let output = '<html><head><meta charset="utf-8" /></head><body>No chain found for id ' + web3ChainId + '</body></html>';
         callback({ mimeType: 'text/html', data: output })
         return;        
       }
-      web3ChainName = Object.entries(web3Chains).filter(chain => chain[1].id == web3ChainId)[0][0];
     }
-    let web3chain = web3Chains[web3ChainName];
+    
 
     // Prepare the web3 client
-    const web3Client = createPublicClient({
+    let web3Client = createPublicClient({
       chain: web3chain,
       transport: http(),
     });
 
     // Contract address / Domain name
     let contractAddress = url.hostname;
+    // If not looking like an address...
     if(/^0x[0-9a-fA-F]{40}/.test(contractAddress) == false) {
       if(isSupportedDomainName(contractAddress, web3chain)) {
+        let resolutionInfos = null
         try {
-          contractAddress = await resolveDomainNameForEIP4804(contractAddress, web3Client)
+          resolutionInfos = await resolveDomainNameForEIP4804(contractAddress, web3Client)
         }
         catch(err) {
           let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve domain name ' + contractAddress + '</body></html>';
           callback({ mimeType: 'text/html', data: output })
           return;
         }
+
+        // Set contract address
+        contractAddress = resolutionInfos.address
+        // We got an address on another chain? Update the web3Client
+        if(resolutionInfos.chainId) {
+          web3chain = Object.values(web3Chains).find(chain => chain.id == resolutionInfos.chainId)
+          web3Client = createPublicClient({
+            chain: web3chain,
+            transport: http(),
+          });
+        }
       }
+      // Domain name not supported in this chain
       else {
         let output = '<html><head><meta charset="utf-8" /></head><body>Unresolvable domain name : ' + contractAddress + ' : no supported resolvers found in this chain</body></html>';
         callback({ mimeType: 'text/html', data: output })

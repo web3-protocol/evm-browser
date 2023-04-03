@@ -34,7 +34,7 @@
     "eth-provider": "^0.13.6",
     "mime-types": "^2.1.35",
     "undici": "^5.20.0",
-    "viem": "^0.1.5",
+    "viem": "^0.2.0",
     "webpack": "^5.76.1",
     "webpack-cli": "^5.0.1",
     "yargs": "^17.7.1"

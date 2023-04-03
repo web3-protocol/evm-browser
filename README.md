@@ -7,7 +7,7 @@ Browser forked from the great [electron-as-browser](https://github.com/hulufei/e
 
 will load a goerli proof-of-concept "on-chain website" served by a smart contract and interacting with Terraforms ([see contract on etherscan](https://goerli.etherscan.io/address/0xA66556f4DB239E713491859258E577f25510eFd6#code)). 
 
-ENS domain name resolution happens via the declaration of a web3 TXT record containing a [EIP-3770 chain-specific address](https://eips.ethereum.org/EIPS/eip-3770), in this example : ``gor:0xA66556f4DB239E713491859258E577f25510eFd6``.
+ENS domain name resolution happens via the (declaration of a web3 TXT record)[https://app.ens.domains/name/terraformnavigator.eth/details] containing a [EIP-3770 chain-specific address](https://eips.ethereum.org/EIPS/eip-3770), in this example : ``gor:0xA66556f4DB239E713491859258E577f25510eFd6``.
 
 ![./screenshot2.png](./screenshot2.png)
 

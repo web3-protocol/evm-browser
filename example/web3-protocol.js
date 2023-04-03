@@ -5,7 +5,7 @@ const mime = require('mime-types')
 // We need that only for the short-name -> id mapping, for the resolution of EIP-3770 address
 // const {chains: ethChainsPkgWeb3Chains } = require('eth-chains')
 // Temporary until the above package has auto-update activated (looks like it is coming very soon)
-const chainsJsonFileChans = require('./web3-chains.js')
+const chainsJsonFileChains = require('./web3-chains.js')
 const { PassThrough } = require('stream')
 
 //
@@ -70,7 +70,7 @@ const registerWeb3Protocol = (web3Chains) => {
         // EIP-3770 address
         else if(web3TxtParts.length == 2) {
           // Search the chain by its chain short name
-          let chainByShortName = Object.values(chainsJsonFileChans).find(chain => chain.shortName == web3TxtParts[0]) || null
+          let chainByShortName = Object.values(chainsJsonFileChains).find(chain => chain.shortName == web3TxtParts[0]) || null
           if(chainByShortName == null) {
             throw new Error("The chain short name of the web3 TXT record was not found")
           }

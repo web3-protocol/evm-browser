@@ -7,11 +7,36 @@ const yargs = require("yargs");
 const { fetch } = require("undici");
 global.fetch = fetch;
 const fs = require('fs')
+// const {chains: ethChainsPkgWeb3Chains } = require('eth-chains')
+// Temporary until the above package has auto-update activated (looks like it is coming very soon)
+const chainsJsonFileChains = require('./web3-chains.js')
 
 const { registerWeb3Protocol } = require('./web3-protocol.js')
 const { registerEvmProtocol } = require('./evm-protocol.js')
 
 let browser;
+
+
+//
+// Add missing chains to the viem chains
+//
+
+Object.values(chainsJsonFileChains).map(chainsJsonFileChain => {
+  let alreadyDefinedChain = Object.values(web3Chains).find(chain => chain.id == chainsJsonFileChain.chainId) || null
+  if(alreadyDefinedChain == null) {
+    // Add the custom chain on the list
+    let key = 'custom-' + chainsJsonFileChain.chainId
+    web3Chains[key] = {
+      id: chainsJsonFileChain.chainId,
+      name: key,
+      network: key,
+      rpcUrls: {
+        public: { http: chainsJsonFileChain.rpc },
+        default: { http: chainsJsonFileChain.rpc },
+      }
+    }    
+  }
+})
 
 
 //
@@ -46,9 +71,9 @@ if(args.web3Chain) {
     let chainRpcUrl = newChainComponents.slice(1).join("=");
 
     // Check if chain already defined
-    let alreadyDefinedChains = Object.entries(web3Chains).filter(chain => chain[1].id == chainId)
-    if(alreadyDefinedChains.length == 1) {
-      let chainKey = alreadyDefinedChains[0][0];
+    let alreadyDefinedChain = Object.entries(web3Chains).find(chain => chain[1].id == chainId) || null
+    if(alreadyDefinedChain) {
+      let chainKey = alreadyDefinedChain[0];
       web3Chains[chainKey].rpcUrls.default.http = [chainRpcUrl]
       web3Chains[chainKey].rpcUrls.default.webSocket = undefined
       web3Chains[chainKey].rpcUrls.public.http = [chainRpcUrl]

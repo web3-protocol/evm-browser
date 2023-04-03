@@ -96,7 +96,7 @@ function createWindow() {
 // Register the evm protocol as priviledged (authorize the fetch API)
 // Must be done before the app is ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'web3', privileges: { supportFetchAPI: true } },
+  { scheme: 'web3', privileges: { standard:true, supportFetchAPI: true } },
   { scheme: 'evm', privileges: { supportFetchAPI: true } }
 ])
 

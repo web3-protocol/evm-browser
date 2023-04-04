@@ -162,7 +162,15 @@ const registerWeb3Protocol = (web3Chains) => {
     ];
 
 
-    let url = new URL(request.url);
+    let url = null
+    try {
+      url = new URL(request.url);
+    }
+    catch {
+      let output = 'Unable to parse URL';
+      displayError(output, callback)
+      return;
+    }
 
     // Web3 network : if provided in the URL, use it, or mainnet by default
     let web3chain = web3Chains["mainnet"];
@@ -172,8 +180,8 @@ const registerWeb3Protocol = (web3Chains) => {
       // Find the matching chain
       web3chain = Object.values(web3Chains).find(chain => chain.id == web3ChainId)
       if(web3chain == null) {
-        let output = '<html><head><meta charset="utf-8" /></head><body>No chain found for id ' + web3ChainId + '</body></html>';
-        callback({ mimeType: 'text/html', data: output })
+        let output = 'No chain found for id ' + web3ChainId;
+        displayError(output, callback)
         return;        
       }
     }
@@ -195,8 +203,8 @@ const registerWeb3Protocol = (web3Chains) => {
           resolutionInfos = await resolveDomainNameForEIP4804(contractAddress, web3Client)
         }
         catch(err) {
-          let output = '<html><head><meta charset="utf-8" /></head><body>Failed to resolve domain name ' + contractAddress + '</body></html>';
-          callback({ mimeType: 'text/html', data: output })
+          let output = 'Failed to resolve domain name ' + contractAddress;
+          displayError(output, callback)
           return;
         }
 
@@ -213,8 +221,8 @@ const registerWeb3Protocol = (web3Chains) => {
       }
       // Domain name not supported in this chain
       else {
-        let output = '<html><head><meta charset="utf-8" /></head><body>Unresolvable domain name : ' + contractAddress + ' : no supported resolvers found in this chain</body></html>';
-        callback({ mimeType: 'text/html', data: output })
+        let output = 'Unresolvable domain name : ' + contractAddress + ' : no supported resolvers found in this chain';
+        displayError(output, callback)
         return;
       }
     }
@@ -299,8 +307,7 @@ const registerWeb3Protocol = (web3Chains) => {
         output = Buffer.from(rawOutput[0].substr(2), "hex")
       }
       catch(err) {
-        output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';
-        callback({ mimeType: 'text/html', data: output })
+        displayError(err.toString(), callback)
         return;
       }
     }
@@ -325,8 +332,8 @@ const registerWeb3Protocol = (web3Chains) => {
               argValue = await supportedTypes[j].parse(argValue, web3Client)
             }
             catch(e) {
-              output = '<html><head><meta charset="utf-8" /></head><body>Argument ' + i + ' was explicitely requested to be casted to ' + supportedTypes[j].type + ', but : ' + e + '</body></html>';
-              callback({ mimeType: 'text/html', data: output })
+              output = 'Argument ' + i + ' was explicitely requested to be casted to ' + supportedTypes[j].type + ', but : ' + e;
+              displayError(output, callback)
               return;
             }
             detectedType = supportedTypes[j].type
@@ -400,8 +407,7 @@ const registerWeb3Protocol = (web3Chains) => {
         })
       }
       catch(err) {
-        output = '<html><head><meta charset="utf-8" /></head><body><pre>' + err.toString() + '</pre></body></html>';
-        callback({ mimeType: 'text/html', data: output })
+        displayError(err.toString(), callback)
         return;
       }
     }
@@ -423,6 +429,22 @@ const registerWeb3Protocol = (web3Chains) => {
 
     callback({ mimeType: contractReturnMimeType, data: stream })
   })
+
+
+  //
+  // Utilities
+  //
+
+  // Display an error on the browser. callbackFunction is the callback from registerStreamProtocol
+  const displayError = (errorText, callbackFunction) => {
+    output = '<html><head><meta charset="utf-8" /></head><body><pre>' + errorText + '</pre></body></html>';
+
+    const stream = new PassThrough()
+    stream.push(output)
+    stream.push(null)
+
+    callbackFunction({ mimeType: 'text/html', data: stream })
+  }
 
   console.log('Web3 protocol registered: ', result)
 }

@@ -343,6 +343,9 @@ class BrowserLikeWindow extends EventEmitter {
         log.debug('did-stop-loading', { title: webContents.getTitle() });
         this.setTabConfig(id, { isLoading: false });
       })
+      .on('did-fail-load', (e, errorCode, errorDescription) => {
+        log.debug('did-fail-load', errorCode, errorDescription)
+      })
       .on('dom-ready', () => {
         webContents.focus();
       });

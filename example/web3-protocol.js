@@ -41,8 +41,8 @@ const registerWeb3Protocol = (web3Chains) => {
     throw new Error('Unrecognized domain name : ' + domainName)
   }
 
-  // Follow EIP-4804 standard : if there is a web3 TXT record with a common or EIP-3770 address, 
-  // then go there. Otherwise, go to the resolved address.
+  // Follow eip-6821 standard : if there is a contentcontract TXT record 
+  // with a common or EIP-3770 address, then go there. Otherwise, go to the resolved address.
   const resolveDomainNameForEIP4804 = async (domainName, web3Client) => {
     let result = {
       address: null,
@@ -51,41 +51,41 @@ const registerWeb3Protocol = (web3Chains) => {
 
     // ENS
     if(domainName.endsWith('.eth')) {
-      // Get the web3 TXT record
-      const web3Txt = await web3Client.getEnsText({
+      // Get the contentcontract TXT record
+      const contentContractTxt = await web3Client.getEnsText({
         name: ensNormalize(domainName),
-        key: 'web3',
+        key: 'contentcontract',
       })
 
-      // web3 TXT case
-      if(web3Txt) {
-        let web3TxtParts = web3Txt.split(':');
+      // contentcontract TXT case
+      if(contentContractTxt) {
+        let contentContractTxtParts = contentContractTxt.split(':');
         // Simple address?
-        if(web3TxtParts.length == 1) {
-          if(/^0x[0-9a-fA-F]{40}/.test(web3Txt) == false) {
-            throw new Error("Invalid address in web3 TXT record")
+        if(contentContractTxtParts.length == 1) {
+          if(/^0x[0-9a-fA-F]{40}/.test(contentContractTxt) == false) {
+            throw new Error("Invalid address in contentcontract TXT record")
           }
-          result.address = web3Txt;
+          result.address = contentContractTxt;
         }
         // EIP-3770 address
-        else if(web3TxtParts.length == 2) {
+        else if(contentContractTxtParts.length == 2) {
           // Search the chain by its chain short name
-          let chainByShortName = Object.values(chainsJsonFileChains).find(chain => chain.shortName == web3TxtParts[0]) || null
+          let chainByShortName = Object.values(chainsJsonFileChains).find(chain => chain.shortName == contentContractTxtParts[0]) || null
           if(chainByShortName == null) {
-            throw new Error("The chain short name of the web3 TXT record was not found")
+            throw new Error("The chain short name of the contentcontract TXT record was not found")
           }
-          if(/^0x[0-9a-fA-F]{40}/.test(web3TxtParts[1]) == false) {
-            throw new Error("Invalid address in web3 TXT record")
+          if(/^0x[0-9a-fA-F]{40}/.test(contentContractTxtParts[1]) == false) {
+            throw new Error("Invalid address in contentcontract TXT record")
           }
           result.chainId = chainByShortName.chainId
-          result.address = web3TxtParts[1]
+          result.address = contentContractTxtParts[1]
         }
         // Mistake
         else {
-          throw new Error("Invalid address in web3 TXT record")
+          throw new Error("Invalid address in contentcontract TXT record")
         }
       }
-      // No web3 TXT
+      // No contentcontract TXT
       else {
         result.address = await resolveDomainName(domainName, web3Client);
       }

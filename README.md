@@ -7,9 +7,17 @@ Browser forked from the great [electron-as-browser](https://github.com/hulufei/e
 
 will load an "on-chain website" served by a smart contract and interacting with Terraforms ([see contract on etherscan](https://etherscan.io/address/0x894ed8a11fed2cca743c78d807e75510b40eb701#code)). 
 
+The browser works out of the box with all chains (providers are given by [viem.sh](https://viem.sh/) and [chainid.network](https://chainid.network/)) and support the [Frame.sh](https://frame.sh/) wallet.
+
 ENS domain name resolution ([proposed EIP-6821](https://ethereum-magicians.org/t/eip-6821-support-ens-name-for-web3-url/13654)) happens via the declaration of a ``contentcontract`` TXT record containing a [EIP-3770 chain-specific address](https://eips.ethereum.org/EIPS/eip-3770), or, if not present, via a standard resolution.
 
 ![./screenshot2.png](./screenshot2.png)
+
+Clicking on a terraform will load a dynamic page, for example : 
+
+``web3://terraformnavigator.eth/viewHTML/9352``
+
+![./screenshot3.png](./screenshot3.png)
 
 More examples : 
 

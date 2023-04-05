@@ -100,67 +100,73 @@ const registerWeb3Protocol = (web3Chains) => {
 
 
   //
+  // The supported types in arguments
+  //
+
+  let supportedTypes = [
+    {
+      type: 'uint256',
+      autoDetectable: true,
+      parse: async (x, web3Client) => {
+        x = parseInt(x)
+        if(isNaN(x)) {
+          throw new Error("Number is not parseable")
+        }
+        if(x < 0) {
+          throw new Error("Number must be positive")
+        }
+        return x
+      },
+    },
+    {
+      type: 'bytes32',
+      autoDetectable: true,
+      parse: async (x, web3Client) => {
+        if(x.length != 34) {
+          throw new Error("Bad length (must include 0x in front)")
+        }
+        if(x.substr(0, 2) != '0x') {
+          throw new Error("Must start with 0x")
+        }
+        return x
+      }
+    }, 
+    {
+      type: 'address',
+      autoDetectable: true,
+      parse: async (x, web3Client) => {
+        if(x.length == 22 && x.substr(0, 2) == '0x') {
+          return x;
+        }
+        if(isSupportedDomainName(x, web3Client.chain)) {
+          // Will throw an error if failure
+          let xAddress = await resolveDomainName(x, web3Client);
+          return xAddress;
+        }
+
+        throw new Error("Unrecognized address")
+      }
+    },
+    {
+      type: 'bytes',
+      autoDetectable: false,
+      parse: async (x, web3Client) => x,
+    },
+    {
+      type: 'string',
+      autoDetectable: false,
+      parse: async (x, web3Client) => x,
+    },
+  ];
+
+
+
+  //
   // web3:// call handling
   //
 
   let result = protocol.registerStreamProtocol("web3", async (request, callback) => {
-    // The supported types in arguments
-    let supportedTypes = [
-      {
-        type: 'uint256',
-        autoDetectable: true,
-        parse: async (x, web3Client) => {
-          x = parseInt(x)
-          if(isNaN(x)) {
-            throw new Error("Number is not parseable")
-          }
-          if(x < 0) {
-            throw new Error("Number must be positive")
-          }
-          return x
-        },
-      },
-      {
-        type: 'bytes32',
-        autoDetectable: true,
-        parse: async (x, web3Client) => {
-          if(x.length != 34) {
-            throw new Error("Bad length (must include 0x in front)")
-          }
-          if(x.substr(0, 2) != '0x') {
-            throw new Error("Must start with 0x")
-          }
-          return x
-        }
-      }, 
-      {
-        type: 'address',
-        autoDetectable: true,
-        parse: async (x, web3Client) => {
-          if(x.length == 22 && x.substr(0, 2) == '0x') {
-            return x;
-          }
-          if(isSupportedDomainName(x, web3Client.chain)) {
-            // Will throw an error if failure
-            let xAddress = await resolveDomainName(x, web3Client);
-            return xAddress;
-          }
-
-          throw new Error("Unrecognized address")
-        }
-      },
-      {
-        type: 'bytes',
-        autoDetectable: false,
-        parse: async (x, web3Client) => x,
-      },
-      {
-        type: 'string',
-        autoDetectable: false,
-        parse: async (x, web3Client) => x,
-      },
-    ];
-
+    let debuggingHeaders = {}
 
     let url = null
     try {
@@ -207,6 +213,9 @@ const registerWeb3Protocol = (web3Chains) => {
           displayError(output, callback)
           return;
         }
+
+        // Debugging : Store the chain id of the resolver
+        debuggingHeaders['web3-nameservice-chainid'] = "" + web3Client.chain.id;
 
         // Set contract address
         contractAddress = resolutionInfos.address
@@ -288,9 +297,14 @@ const registerWeb3Protocol = (web3Chains) => {
     if(contractMode == 'manual') {
       let callData = url.pathname + (Array.from(url.searchParams.values()).length > 0 ? "?" + url.searchParams : "");
       try {
+        let serializedCallData = "0x" + Buffer.from(callData).toString('hex')
+
+        // Debugging : store the calldata
+        debuggingHeaders['web3-calldata'] = serializedCallData
+
         let rawOutput = await web3Client.call({
           to: contractAddress,
-          data: "0x" + Buffer.from(callData).toString('hex')
+          data: serializedCallData
         })
 
         // Looks like this is what happens when calling non-contracts
@@ -381,6 +395,11 @@ const registerWeb3Protocol = (web3Chains) => {
         }
       }
 
+      // Debugging : store the method, args, return data
+      debuggingHeaders['web3-auto-method'] = contractMethodName
+      debuggingHeaders['web3-auto-method-args'] = JSON.stringify(contractMethodArgsDef)
+      debuggingHeaders['web3-auto-method-return'] = JSON.stringify(contractReturnDataTypes)
+
 
       // Contract definition
       let abi = [
@@ -422,12 +441,21 @@ const registerWeb3Protocol = (web3Chains) => {
       output = JSON.stringify(output.map(x => "" + x))
     }
 
+    // Prepare debugging headers
+    debuggingHeaders['web3-contract-address'] = contractAddress;
+    debuggingHeaders['web3-target-chainid'] = "" + web3Client.chain.id;
+    debuggingHeaders['web3-resolve-mode'] = contractMode;
+
     // ReadableStream
     const stream = new PassThrough()
     stream.push(output)
     stream.push(null)
 
-    callback({ mimeType: contractReturnMimeType, data: stream })
+    callback({ 
+      statusCode: 200, 
+      mimeType: contractReturnMimeType, 
+      data: stream,
+      headers: debuggingHeaders })
   })
 
 
@@ -443,7 +471,7 @@ const registerWeb3Protocol = (web3Chains) => {
     stream.push(output)
     stream.push(null)
 
-    callbackFunction({ mimeType: 'text/html', data: stream })
+    callbackFunction({ statusCode: 500, mimeType: 'text/html', data: stream })
   }
 
   console.log('Web3 protocol registered: ', result)

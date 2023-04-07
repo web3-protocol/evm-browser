@@ -152,6 +152,16 @@ class BrowserLikeWindow extends EventEmitter {
       ])
       .forEach(([name, listener]) => ipcMain.on(name, listener));
 
+    // On windows maximize, the browserviews are not updated automatically
+    // cf https://github.com/electron/electron/issues/22174
+    // So we add the below code just to handle the maximize window issue
+    this.win.on('resize', () => {
+      setTimeout(() => {
+        this.setContentBounds();
+        this.controlView.setBounds(this.getControlBounds());
+      }, 0)
+    })
+
     /**
      * closed event
      *

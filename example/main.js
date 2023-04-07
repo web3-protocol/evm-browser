@@ -50,6 +50,12 @@ yargs
     type: 'string',
     description: "Add/override a chain definition\nFormat: <chain-id>=<rpc-provider-url> \nMultiple can be provided with multiple --web3-chain use. Override existing chain settings. Examples:\n1=https://eth-mainnet.alchemyapi.io/v2/<your_api_key>\n42170=https://nova.arbitrum.io/rpc\n 5=http://127.0.0.1:8545"
   })
+  .option('debug', {
+    type: 'boolean',
+    // Activate by default for dev work
+    default: app.isPackaged == false,
+    description: "Show devtools windows, output debugging infos on console"
+  })
 let args = yargs.parse()
 
 // Add/override chain definitions
@@ -107,7 +113,7 @@ function createWindow() {
     controlPanel: fileUrl(`${__dirname}/renderer/control.html`),
     startPage: args._.length == 1 ? args._[0] : 'web3://terraformnavigator.eth/',
     blankTitle: 'New tab',
-    debug: true, // will open controlPanel's devtools
+    debug: args.debug, // will open controlPanel's devtools
     viewReferences: {
       preload: `${__dirname}/eth-provider-preload.js`,
     }

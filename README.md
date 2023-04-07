@@ -70,3 +70,14 @@ Show the devtools : `evm-browser --debug`
 
 If you want to your local evm node for goerli : `yarn start -- -- --web3-chain 5=http://127.0.0.1:8545` (the ``-- --`` is nedded to skip electron-forge then yarn)
 
+## Debugging
+
+All calls to ``web3://`` are returned with debugging headers, visible in the devtools, to help understand what is happening.
+
+- ``web3-nameservice-chainid`` The chain id where the domain name resolver was called.
+- ``web3-target-chainid`` After nameservice resolution, the chaid id where the actual call will happen.
+- ``web3-resolve-mode`` Indicate if the web3 call will be made in ``auto`` or ``manual`` mode (see EIP 4804 specs)
+- ``web3-auto-method`` If ``auto`` mode, the name of the smartcontract method that will be called.
+- ``web3-auto-args`` If ``auto`` mode, the types of the arguments that will be given to the smartcontract method.
+- ``web3-auto-return`` If ``auto`` mode, the types of the data returned by the smartcontract method.
+- ``web3-calldata`` If ``manual`` mode, the calldata sent to the contract.

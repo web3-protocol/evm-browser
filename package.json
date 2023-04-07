@@ -24,7 +24,8 @@
     "start:webpack": "npx webpack",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "publish": "electron-forge publish"
   },
   "dependencies": {
     "electron-log": "^3.0.7",
@@ -48,6 +49,7 @@
     "@electron-forge/maker-rpm": "^6.1.1",
     "@electron-forge/maker-squirrel": "^6.1.1",
     "@electron-forge/maker-zip": "^6.1.1",
+    "@electron-forge/publisher-github": "^6.1.1",
     "babel-loader": "^9.1.2",
     "classnames": "^2.2.6",
     "electron": "^18.3.7",

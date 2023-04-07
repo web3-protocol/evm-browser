@@ -133,14 +133,13 @@ protocol.registerSchemesAsPrivileged([
   // Standard : Add fonctionalities, such as localstorage, but will break some calls such 
   // as web3://0x5a985f13345e820aa9618826b85f74c3986e1463:5/tokenSVG/1.svg ; to be debugged
   // { scheme: 'web3', privileges: { standard:true, supportFetchAPI: true, stream: true } },
-  { scheme: 'web3', privileges: { supportFetchAPI: true } },
-  { scheme: 'evm', privileges: { supportFetchAPI: true } }
+  { scheme: 'web3', privileges: { supportFetchAPI: true } }
 ])
 
 app.on('ready', async () => {
   registerWeb3Protocol(web3Chains);
   // To be removed later
-  registerEvmProtocol(web3Chains);
+  // registerEvmProtocol(web3Chains);
 
   createWindow();
 });

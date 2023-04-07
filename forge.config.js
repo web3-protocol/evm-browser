@@ -22,6 +22,19 @@ module.exports = {
     //   config: {},
     // },
   ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'nand2',
+          name: 'evm-browser'
+        },
+        // prerelease: true
+        draft: true
+      }
+    }
+  ],
   hooks: {
     generateAssets: async (forgeConfig, platform, arch) => {
       

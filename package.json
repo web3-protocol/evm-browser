@@ -30,6 +30,7 @@
     "electron-log": "^3.0.7",
     "electron-squirrel-startup": "^1.0.0",
     "eth-provider": "^0.13.6",
+    "file-url": "^2.0.2",
     "mime-types": "^2.1.35",
     "undici": "^5.20.0",
     "viem": "^0.2.0",
@@ -50,7 +51,6 @@
     "babel-loader": "^9.1.2",
     "classnames": "^2.2.6",
     "electron": "^18.3.7",
-    "file-url": "^2.0.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
   }

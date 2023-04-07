@@ -65,3 +65,6 @@ typings/
 
 # IntelliJ project files
 .idea
+
+# Results of packaging are stored there
+out/

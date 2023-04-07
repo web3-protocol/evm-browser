@@ -55,8 +55,8 @@ class BrowserLikeWindow extends EventEmitter {
 
     this.options = options;
     const {
-      width = 1024,
-      height = 800,
+      width = 1300,
+      height = 1000,
       winOptions = {},
       controlPanel,
       controlReferences

@@ -2868,7 +2868,7 @@ fd-slicer@~1.1.0:
 file-url@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/file-url/-/file-url-2.0.2.tgz#e951784d79095127d3713029ab063f40818ca2ae"
-  integrity sha1-6VF4TXkJUSfTcTApqwY/QIGMoq4=
+  integrity sha512-x3989K8a1jM6vulMigE8VngH7C5nci0Ks5d9kVjUXmNF28gmiZUNujk5HjwaS8dAzN2QmUfX56riJKgN00dNRw==
 
 filename-reserved-regex@^2.0.0:
   version "2.0.0"

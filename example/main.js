@@ -114,6 +114,9 @@ function createWindow() {
     startPage: args._.length == 1 ? args._[0] : 'web3://terraformnavigator.eth/',
     blankTitle: 'New tab',
     debug: args.debug, // will open controlPanel's devtools
+    winOptions: {
+      autoHideMenuBar: args.debug == false,
+    },
     viewReferences: {
       preload: `${__dirname}/eth-provider-preload.js`,
     }

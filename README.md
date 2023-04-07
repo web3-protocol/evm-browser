@@ -1,4 +1,4 @@
-# evm-browser
+# EVM Browser
 
 Browser with support of the [EIP-4804 `web3://` protocol](https://eips.ethereum.org/EIPS/eip-4804), which allow you to display the contents returned by EVM contracts from any EVM chain.
 Browser forked from the great [electron-as-browser](https://github.com/hulufei/electron-as-browser) from hulufei. Experimental!
@@ -53,15 +53,13 @@ This is thanks to [eth-provider](https://github.com/floating/eth-provider), whic
 
 `yarn install`
 
-`yarn start:setup`
-
 ## Usage
 
 `yarn start`
 
 By default it will use the ethereum providers embedded with the [viem.sh](https://viem.sh) library.
 
-Use your own web3 provider for mainnet : `yarn start --web3-chain 1=https://eth-mainnet.alchemyapi.io/v2/xxxxxx`
+If you want to use your own web3 provider for mainnet : `yarn start --web3-chain 1=https://eth-mainnet.alchemyapi.io/v2/xxxxxx`
 
 Use your local evm node for goerli : `yarn start --web3-chain 5=http://127.0.0.1:8545`
 

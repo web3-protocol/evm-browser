@@ -1,16 +1,13 @@
 {
   "name": "evm-browser",
-  "version": "1.0.0",
-  "description": "Make electron like browser easy and flexible, with added evm:// protocol scheme support.",
+  "version": "0.1.0",
+  "description": "Browser with web3:// support.",
   "keywords": [
-    "electron",
     "browser",
-    "navigation",
-    "tab",
-    "addressbar"
+    "web3"
   ],
-  "main": "index.js",
-  "author": "hui.liu",
+  "main": "example/main.js",
+  "author": "nand, hui.liu",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -22,15 +19,16 @@
     "control.js"
   ],
   "scripts": {
-    "docs": "documentation build *.js -f html -o docs",
     "start:control-dev": "npx babel --watch example/renderer/control.jsx --out-file example/renderer/control-compiled.js",
     "start:control": "npx babel example/renderer/control.jsx --out-file example/renderer/control-compiled.js",
     "start:webpack": "npx webpack",
-    "start:setup": "npx babel example/renderer/control.jsx --out-file example/renderer/control-compiled.js && npx webpack",
-    "start": "electron example/main.js"
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "dependencies": {
     "electron-log": "^3.0.7",
+    "electron-squirrel-startup": "^1.0.0",
     "eth-provider": "^0.13.6",
     "mime-types": "^2.1.35",
     "undici": "^5.20.0",
@@ -44,6 +42,12 @@
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
+    "@electron-forge/cli": "^6.1.1",
+    "@electron-forge/maker-deb": "^6.1.1",
+    "@electron-forge/maker-rpm": "^6.1.1",
+    "@electron-forge/maker-squirrel": "^6.1.1",
+    "@electron-forge/maker-zip": "^6.1.1",
+    "babel-loader": "^9.1.2",
     "classnames": "^2.2.6",
     "electron": "^18.3.7",
     "file-url": "^2.0.2",

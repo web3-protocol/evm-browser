@@ -54,6 +54,7 @@ body {
   display: flex;
   margin: 0 5px 0 10px;
   overflow: hidden;
+  -webkit-mask-image: -webkit-gradient(linear, left top, right top, from(#000000), color-stop(80%, #000000), to(transparent));
 }
 .title-content {
   flex-shrink: 0;

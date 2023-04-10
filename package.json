@@ -52,7 +52,7 @@
     "@electron-forge/publisher-github": "^6.1.1",
     "babel-loader": "^9.1.2",
     "classnames": "^2.2.6",
-    "electron": "^18.3.7",
+    "electron": "^24.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
   }

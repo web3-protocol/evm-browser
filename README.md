@@ -4,7 +4,7 @@ Web browser with support of the [EIP-4804 `web3://` protocol](https://eips.ether
 
 ![./screenshot2.png](./screenshot2.png)
 
-As an example, ``web3://terraformnavigator.eth/`` is an on-chain website served by a [smart contract](https://etherscan.io/address/0x894ed8a11fed2cca743c78d807e75510b40eb701#code), which interacts with the [Terraform NFT contract](https://etherscan.io/address/0x4e1f41613c9084fdb9e34e11fae9412427480e56#code) : pages are generated dynamically, these are not static pages.
+As an example, ``web3://terraformnavigator.eth/`` is an on-chain website served by a [smart contract](https://etherscan.io/address/0x9a595bc28f1c40ab96247e8157a2b0a6762e7543#code), which interacts with the [Terraform NFT contract](https://etherscan.io/address/0x4e1f41613c9084fdb9e34e11fae9412427480e56#code) : pages are generated dynamically, these are not static pages.
 
 The browser works out of the box with all chains (providers are given by [viem.sh](https://viem.sh/) and [chainid.network](https://chainid.network/)) and support the [Frame.sh](https://frame.sh/) wallet.
 

@@ -14,7 +14,7 @@ Browser forked from the great [electron-as-browser](https://github.com/hulufei/e
 
 In the above example, clicking on a terraform will load a dynamic page, for example : 
 
-``web3://terraformnavigator.eth/viewHTML/9352``
+``web3://terraformnavigator.eth/view/9352``
 
 ![./screenshot3.png](./screenshot3.png)
 

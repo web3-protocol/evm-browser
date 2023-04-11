@@ -108,6 +108,11 @@ const registerWeb3Protocol = (web3Chains) => {
       type: 'uint256',
       autoDetectable: true,
       parse: async (x, web3Client) => {
+        // Prevent parsing of hexadecimal numbers
+        if(x.length >= 2 && x.substr(0, 2) == '0x') {
+          throw new Error("Number must not be in hexadecimal format")
+        }
+
         x = parseInt(x)
         if(isNaN(x)) {
           throw new Error("Number is not parseable")

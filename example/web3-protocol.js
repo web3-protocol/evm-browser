@@ -149,8 +149,14 @@ const registerWeb3Protocol = (web3Chains) => {
     },
     {
       type: 'bytes',
-      autoDetectable: false,
-      parse: async (x, web3Client) => x,
+      autoDetectable: true,
+      parse: async (x, web3Client) => {
+        if(x.length < 2 || x.substr(0, 2) != '0x') {
+          throw new Error("Must start with 0x");
+        }
+
+        return x;
+      },
     },
     {
       type: 'string',

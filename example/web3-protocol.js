@@ -271,27 +271,35 @@ const registerWeb3Protocol = (web3Chains) => {
     }
 
     // Detect if the contract is manual mode : resolveMode must returns "manual"
-    try {
-      let resolveMode = await web3Client.readContract({
-        address: contractAddress,
-        abi: [{
-          inputs: [],
-          name: 'resolveMode',
-          outputs: [{type: 'bytes32'}],
-          stateMutability: 'view',
-          type: 'function',
-        }],
-        functionName: 'resolveMode',
-        args: [],
-      })
+    {
+      let resolveMode = '';
+      try {
+        resolveMode = await web3Client.readContract({
+          address: contractAddress,
+          abi: [{
+            inputs: [],
+            name: 'resolveMode',
+            outputs: [{type: 'bytes32'}],
+            stateMutability: 'view',
+            type: 'function',
+          }],
+          functionName: 'resolveMode',
+          args: [],
+        })
+      }
+      catch(err) {/** If call to resolveMode fails, we default to auto */}
+      
       let resolveModeAsString = Buffer.from(resolveMode.substr(2), "hex").toString().replace(/\0/g, '');
+      if(['', 'auto', 'manual'].indexOf(resolveModeAsString) === -1) {
+        displayError("web3 resolveMode '" + resolveModeAsString + "' is not supported", callback, debuggingHeaders)
+        return;
+      }
       if(resolveModeAsString == "manual") {
         contractMode = 'manual';
       }
+      // Store the manual mode as debugging
+      debuggingHeaders['web3-resolve-mode'] = contractMode;
     }
-    catch(err) {}
-    // Store the manual mode as debugging
-    debuggingHeaders['web3-resolve-mode'] = contractMode;
     
 
 

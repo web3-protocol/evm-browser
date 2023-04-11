@@ -48,6 +48,10 @@ evm-browser also ships with [Frame.sh](https://frame.sh/) wallet and local node 
 
 This is thanks to [eth-provider](https://github.com/floating/eth-provider), which is exposed on ``window.ethereum``
 
+## Current limitations
+
+Due to a bug in electron, web storage apis (localStorage, sessionStorage, webSQL, indexedDB, cookies) are disabled for now (see [progress in issue](https://github.com/nand2/evm-browser/issues/3))
+
 ## Usage
 
 `evm-browser`

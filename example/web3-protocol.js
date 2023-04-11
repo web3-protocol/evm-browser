@@ -288,7 +288,7 @@ const registerWeb3Protocol = (web3Chains) => {
         })
       }
       catch(err) {/** If call to resolveMode fails, we default to auto */}
-      
+
       let resolveModeAsString = Buffer.from(resolveMode.substr(2), "hex").toString().replace(/\0/g, '');
       if(['', 'auto', 'manual'].indexOf(resolveModeAsString) === -1) {
         displayError("web3 resolveMode '" + resolveModeAsString + "' is not supported", callback, debuggingHeaders)
@@ -411,7 +411,8 @@ const registerWeb3Protocol = (web3Chains) => {
 
       // Debugging : store the method, args, return data
       debuggingHeaders['web3-auto-method'] = contractMethodName
-      debuggingHeaders['web3-auto-method-args'] = JSON.stringify(contractMethodArgsDef)
+      debuggingHeaders['web3-auto-method-arg-types'] = JSON.stringify(contractMethodArgsDef)
+      debuggingHeaders['web3-auto-method-arg-values'] = JSON.stringify(contractMethodArgs)
       debuggingHeaders['web3-auto-method-return'] = JSON.stringify(contractReturnDataTypes)
 
 

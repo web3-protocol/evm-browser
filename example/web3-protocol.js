@@ -177,7 +177,8 @@ const registerWeb3Protocol = (web3Chains) => {
   //
 
   let result = protocol.registerStreamProtocol("web3", async (request, callback) => {
-    let debuggingHeaders = {}
+    let outputHttpHeaders = {}
+    let outputHttpCode = 200;
 
     let url = null
     try {
@@ -185,7 +186,7 @@ const registerWeb3Protocol = (web3Chains) => {
     }
     catch {
       let output = 'Unable to parse URL';
-      displayError(output, callback, debuggingHeaders)
+      displayError(output, callback, outputHttpHeaders)
       return;
     }
 
@@ -198,7 +199,7 @@ const registerWeb3Protocol = (web3Chains) => {
       web3chain = Object.values(web3Chains).find(chain => chain.id == web3ChainId)
       if(web3chain == null) {
         let output = 'No chain found for id ' + web3ChainId;
-        displayError(output, callback, debuggingHeaders)
+        displayError(output, callback, outputHttpHeaders)
         return;        
       }
     }
@@ -216,7 +217,7 @@ const registerWeb3Protocol = (web3Chains) => {
     if(/^0x[0-9a-fA-F]{40}/.test(contractAddress) == false) {
       if(isSupportedDomainName(contractAddress, web3chain)) {
         // Debugging : Store the chain id of the resolver
-        debuggingHeaders['web3-nameservice-chainid'] = "" + web3Client.chain.id;
+        outputHttpHeaders['web3-nameservice-chainid'] = "" + web3Client.chain.id;
 
         let resolutionInfos = null
         try {
@@ -224,7 +225,7 @@ const registerWeb3Protocol = (web3Chains) => {
         }
         catch(err) {
           let output = 'Failed to resolve domain name ' + contractAddress;
-          displayError(output, callback, debuggingHeaders)
+          displayError(output, callback, outputHttpHeaders)
           return;
         }
 
@@ -242,18 +243,19 @@ const registerWeb3Protocol = (web3Chains) => {
       // Domain name not supported in this chain
       else {
         let output = 'Unresolvable domain name : ' + contractAddress + ' : no supported resolvers found in this chain';
-        displayError(output, callback, debuggingHeaders)
+        displayError(output, callback, outputHttpHeaders)
         return;
       }
     }
     // Store this for debugging
-    debuggingHeaders['web3-target-chainid'] = "" + web3Client.chain.id;
-    debuggingHeaders['web3-contract-address'] = contractAddress;
+    outputHttpHeaders['web3-target-chainid'] = "" + web3Client.chain.id;
+    outputHttpHeaders['web3-contract-address'] = contractAddress;
 
     // Contract method && args && result
-    // 2 modes :
+    // 3 modes :
     // - Auto : we parse the path and arguments and send them
     // - Manual : we forward all the path & arguments as calldata
+    // - eip5219 : Implement IDecentralizedApp
     let contractMode = 'auto'
     let contractReturnDataTypes = [{type: 'string'}];
     let contractReturnMimeType = 'text/html';
@@ -281,38 +283,95 @@ const registerWeb3Protocol = (web3Chains) => {
       }
     }
 
-    // Detect if the contract is manual mode : resolveMode must returns "manual"
+    // Detect the contract mode
     {
-      let resolveMode = '';
+      // Detect if the contract is in eip5219 mode : request() must exist
+      // This is a temporary quick and dirty implementation ; I think that it will eventually be 
+      // included in the EIP-4804 resolveMode()
       try {
-        resolveMode = await web3Client.readContract({
+        await web3Client.readContract({
           address: contractAddress,
           abi: [{
-            inputs: [],
-            name: 'resolveMode',
-            outputs: [{type: 'bytes32'}],
+            inputs: [
+              {
+                type: 'string[]'
+              },
+              {
+                "components": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "tuple[]"
+              }
+            ],
+            name: 'request',
+            outputs: [
+              {
+                "type": "uint256"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "components": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "tuple[]"
+              }
+            ],
             stateMutability: 'view',
             type: 'function',
           }],
-          functionName: 'resolveMode',
-          args: [],
-        })
+          functionName: 'request',
+          args: [[], []],
+        });
+
+        // If the call succeded, we are in eip5219 mode (temporary)
+        contractMode = 'eip5219';
       }
       catch(err) {/** If call to resolveMode fails, we default to auto */}
 
-      let resolveModeAsString = Buffer.from(resolveMode.substr(2), "hex").toString().replace(/\0/g, '');
-      if(['', 'auto', 'manual'].indexOf(resolveModeAsString) === -1) {
-        displayError("web3 resolveMode '" + resolveModeAsString + "' is not supported", callback, debuggingHeaders)
-        return;
-      }
-      if(resolveModeAsString == "manual") {
-        contractMode = 'manual';
-      }
-      // Store the manual mode as debugging
-      debuggingHeaders['web3-resolve-mode'] = contractMode;
-    }
-    
+      // Detect if the contract is manual mode : resolveMode must returns "manual"
+      if(contractMode == 'auto') {
+        let resolveMode = '';
+        try {
+          resolveMode = await web3Client.readContract({
+            address: contractAddress,
+            abi: [{
+              inputs: [],
+              name: 'resolveMode',
+              outputs: [{type: 'bytes32'}],
+              stateMutability: 'view',
+              type: 'function',
+            }],
+            functionName: 'resolveMode',
+            args: [],
+          })
+        }
+        catch(err) {/** If call to resolveMode fails, we default to auto */}
 
+        let resolveModeAsString = Buffer.from(resolveMode.substr(2), "hex").toString().replace(/\0/g, '');
+        if(['', 'auto', 'manual'].indexOf(resolveModeAsString) === -1) {
+          displayError("web3 resolveMode '" + resolveModeAsString + "' is not supported", callback, outputHttpHeaders)
+          return;
+        }
+        if(resolveModeAsString == "manual") {
+          contractMode = 'manual';
+        }
+      }
+
+      // Store the manual mode as debugging
+      outputHttpHeaders['web3-resolve-mode'] = contractMode;
+    }
 
     // Process a manual mode call or an frontpage auto-mode
     if(contractMode == 'manual' || contractMode == "auto" && pathnameParts.length == 2 && pathnameParts[1] == "") {
@@ -325,7 +384,7 @@ const registerWeb3Protocol = (web3Chains) => {
         }
 
         // Debugging : store the calldata
-        debuggingHeaders['web3-calldata'] = serializedCallData
+        outputHttpHeaders['web3-calldata'] = serializedCallData
 
         let rawOutput = await web3Client.call({
           to: contractAddress,
@@ -346,12 +405,12 @@ const registerWeb3Protocol = (web3Chains) => {
         output = Buffer.from(rawOutput[0].substr(2), "hex")
       }
       catch(err) {
-        displayError(err.toString(), callback, debuggingHeaders)
+        displayError(err.toString(), callback, outputHttpHeaders)
         return;
       }
     }
     // Process a auto mode call
-    else {
+    else if(contractMode == 'auto') {
       let contractMethodName = '';
       let contractMethodArgsDef = [];
       let contractMethodArgs = [];
@@ -372,7 +431,7 @@ const registerWeb3Protocol = (web3Chains) => {
             }
             catch(e) {
               output = 'Argument ' + i + ' was explicitely requested to be casted to ' + supportedTypes[j].type + ', but : ' + e;
-              displayError(output, callback, debuggingHeaders)
+              displayError(output, callback, outputHttpHeaders)
               return;
             }
             detectedType = supportedTypes[j].type
@@ -421,10 +480,10 @@ const registerWeb3Protocol = (web3Chains) => {
       }
 
       // Debugging : store the method, args, return data
-      debuggingHeaders['web3-auto-method'] = contractMethodName
-      debuggingHeaders['web3-auto-method-arg-types'] = JSON.stringify(contractMethodArgsDef)
-      debuggingHeaders['web3-auto-method-arg-values'] = JSON.stringify(contractMethodArgs)
-      debuggingHeaders['web3-auto-method-return'] = JSON.stringify(contractReturnDataTypes)
+      outputHttpHeaders['web3-auto-method'] = contractMethodName
+      outputHttpHeaders['web3-auto-method-arg-types'] = JSON.stringify(contractMethodArgsDef)
+      outputHttpHeaders['web3-auto-method-arg-values'] = JSON.stringify(contractMethodArgs)
+      outputHttpHeaders['web3-auto-method-return'] = JSON.stringify(contractReturnDataTypes)
 
 
       // Contract definition
@@ -452,7 +511,79 @@ const registerWeb3Protocol = (web3Chains) => {
         })
       }
       catch(err) {
-        displayError(err.toString(), callback, debuggingHeaders)
+        displayError(err.toString(), callback, outputHttpHeaders)
+        return;
+      }
+    }
+    else if(contractMode == 'eip5219') {
+      // Get full pathname parts (url.pathname is always at least "/")
+      let pathnameParts = url.pathname.split('/').slice(1)
+      // Frontpage ("/") : we send empty array
+      if(pathnameParts.length == 1 && pathnameParts[0] == "") {
+        pathnameParts = [];
+      }
+      // Get query values
+      let queryValues = Object.entries(Object.fromEntries(url.searchParams.entries()));
+
+      try {
+        let eip5219CallResult = await web3Client.readContract({
+          address: contractAddress,
+          abi: [{
+            inputs: [
+              {
+                type: 'string[]'
+              },
+              {
+                "components": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "tuple[]"
+              }
+            ],
+            name: 'request',
+            outputs: [
+              {
+                "type": "uint256"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "components": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "tuple[]"
+              }
+            ],
+            stateMutability: 'view',
+            type: 'function',
+          }],
+          functionName: 'request',
+          args: [
+            pathnameParts, 
+            queryValues
+          ],
+        });
+
+        outputHttpCode = eip5219CallResult[0]
+        output = eip5219CallResult[1]
+        eip5219CallResult[2]
+        eip5219CallResult[2].forEach(header => {
+          outputHttpHeaders[header[0]] = header[1]
+        })
+      }
+      catch(err) {
+        displayError(err.toString(), callback, outputHttpHeaders)
         return;
       }
     }
@@ -467,16 +598,21 @@ const registerWeb3Protocol = (web3Chains) => {
       output = JSON.stringify(output.map(x => "" + x))
     }
 
+    // If contractReturnMimeType was determined (auto and manual mode), then
+    // set it as Content-type
+    if(contractMode == "auto" || contractMode == "manual") {
+      outputHttpHeaders['Content-type'] = contractReturnMimeType;
+    }
+
     // ReadableStream
     const stream = new PassThrough()
     stream.push(output)
     stream.push(null)
 
     callback({ 
-      statusCode: 200, 
-      mimeType: contractReturnMimeType, 
+      statusCode: outputHttpCode, 
       data: stream,
-      headers: debuggingHeaders })
+      headers: outputHttpHeaders })
   })
 
 
@@ -485,7 +621,7 @@ const registerWeb3Protocol = (web3Chains) => {
   //
 
   // Display an error on the browser. callbackFunction is the callback from registerStreamProtocol
-  const displayError = (errorText, callbackFunction, debuggingHeaders) => {
+  const displayError = (errorText, callbackFunction, outputHttpHeaders) => {
     output = '<html><head><meta charset="utf-8" /></head><body><pre>' + errorText + '</pre></body></html>';
 
     const stream = new PassThrough()
@@ -496,7 +632,7 @@ const registerWeb3Protocol = (web3Chains) => {
       statusCode: 500, 
       mimeType: 'text/html', 
       data: stream,
-      headers: debuggingHeaders })
+      headers: outputHttpHeaders })
   }
 
   console.log('Web3 protocol registered: ', result)

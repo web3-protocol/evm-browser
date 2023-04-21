@@ -525,6 +525,9 @@ const registerWeb3Protocol = (web3Chains) => {
       // Get query values
       let queryValues = Object.entries(Object.fromEntries(url.searchParams.entries()));
 
+      outputHttpHeaders['web3-eip5219-resource-values'] = JSON.stringify(pathnameParts)
+      outputHttpHeaders['web3-eip5219-params-values'] = JSON.stringify(queryValues)
+
       try {
         let eip5219CallResult = await web3Client.readContract({
           address: contractAddress,
@@ -575,12 +578,14 @@ const registerWeb3Protocol = (web3Chains) => {
           ],
         });
 
-        outputHttpCode = eip5219CallResult[0]
+        outputHttpCode = Number(eip5219CallResult[0])
         output = eip5219CallResult[1]
-        eip5219CallResult[2]
         eip5219CallResult[2].forEach(header => {
           outputHttpHeaders[header[0]] = header[1]
         })
+
+        outputHttpHeaders['web3-eip5219-result-status-code'] = "" + outputHttpCode
+        outputHttpHeaders['web3-eip5219-result-headers'] = JSON.stringify(eip5219CallResult[2])
       }
       catch(err) {
         displayError(err.toString(), callback, outputHttpHeaders)

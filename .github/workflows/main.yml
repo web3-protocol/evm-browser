@@ -3,6 +3,19 @@ name: Build Distributions
 on:
   # Allows to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      linux_artifact_name:
+        description: 'Linux Artifact name'
+        required: false
+        default: 'linux-dist'
+      windows_artifact_name:
+        description: 'Windows Artifact name'
+        required: false
+        default: 'windows-dist'
+      macos_artifact_name:
+        description: 'MacOs Artifact name'
+        required: false
+        default: 'macos-dist'
 
 env:
   NODE_VERSION: 18
@@ -31,7 +44,7 @@ jobs:
       - name: Upload artifact 📦
         uses: actions/upload-artifact@v3
         with:
-          name: linux-dist
+          name: ${{ github.event.inputs.linux_artifact_name }}
           path: ./out/make/zip
 
 
@@ -56,7 +69,7 @@ jobs:
       - name: Upload artifact 📦
         uses: actions/upload-artifact@v3
         with:
-          name: windows-dist
+          name: ${{ github.event.inputs.windows_artifact_name }}
           path: ./out/make/zip/
 
 
@@ -81,5 +94,5 @@ jobs:
       - name: Upload artifact 📦
         uses: actions/upload-artifact@v3
         with:
-          name: macos-dist
-          path: ./out/make/zip/darwin
+          name: ${{ github.event.inputs.macos_artifact_name }}
+          path: ./out/make/zip/

@@ -45,7 +45,7 @@ const registerWeb3Protocol = (web3Chains) => {
         address: linagee.address,
         abi: linagee.abi,
         functionName: "resolve",
-        args: [domainName]
+        args: [ensNormalize(domainName)]
       });
       if(address == "0x0000000000000000000000000000000000000000") {
         throw new Error("Unable to resolve the argument as an ethereum .og address")
@@ -79,7 +79,7 @@ const registerWeb3Protocol = (web3Chains) => {
           address: linagee.address,
           abi: linagee.abi,
           functionName: "getTextRecord",
-          args: [linagee.domainAsBytes32(domainName), 'contentcontract']
+          args: [linagee.domainAsBytes32(ensNormalize(domainName)), 'contentcontract']
         });
       }
 
@@ -121,7 +121,7 @@ const registerWeb3Protocol = (web3Chains) => {
             address: linagee.address,
             abi: linagee.abi,
             functionName: "resolve",
-            args: [domainName]
+            args: [ensNormalize(domainName)]
           });
         }
         

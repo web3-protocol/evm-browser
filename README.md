@@ -44,9 +44,14 @@ Call the ``balanceOf`` method of ``0x1f9840a85d5af5bf1d1762f925bdaddc4201f984`` 
 
 ## Wallet support
 
-evm-browser also ships with [Frame.sh](https://frame.sh/) wallet and local node wallet support, which allows us to have a full read+write experience!
+EVM Browser also ships with [Frame.sh](https://frame.sh/) wallet and local node wallet support, which allows us to have a full read+write experience!
 
 This is thanks to [eth-provider](https://github.com/floating/eth-provider), which is exposed on ``window.ethereum``
+
+## Web3 domain support
+
+EVM Browser support ``.eth`` ENS domains and ``.og`` Linagee domains.
+
 
 ## Current limitations
 

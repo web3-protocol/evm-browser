@@ -1,5 +1,6 @@
 const { protocol } = require('electron');
-const { stringToHex, createPublicClient, http, decodeAbiParameters } = require('viem');
+const { linagee } = require('./web3-domains.js');
+const { createPublicClient, http, decodeAbiParameters } = require('viem');
 const { normalize: ensNormalize } = require('viem/ens')
 const mime = require('mime-types')
 // We need that only for the short-name -> id mapping, for the resolution of EIP-3770 address
@@ -39,6 +40,18 @@ const registerWeb3Protocol = (web3Chains) => {
       }
       return address;
     }
+    else if(domainName.endsWith('.og')){
+      let address = await web3Client.readContract({ 
+        address: linagee.address,
+        abi: linagee.abi,
+        functionName: "resolve",
+        args: [ensNormalize(domainName)]
+      });
+      if(address == "0x0000000000000000000000000000000000000000") {
+        throw new Error("Unable to resolve the argument as an ethereum .og address")
+      }
+      return address;
+    }
 
     throw new Error('Unrecognized domain name : ' + domainName)
   }
@@ -62,34 +75,12 @@ const registerWeb3Protocol = (web3Chains) => {
         });
       }
       else if(domainName.endsWith('.og')){
-        if(domainName.length > 35)
-          throw new Error("Domain too long (32 bytes max for .og");
-
-        //og names must be converted from a string into a bytes hex string without og on the end
-        let domainBytes32 = stringToHex(domainName.slice(0,-3), {size: 32});
-        // pad the string properly
-        while (domainBytes32.length < 66) {
-          domainBytes32 += '0';
-        }
-
-        const ogAddress = "0x6023E55814DC00F094386d4eb7e17Ce49ab1A190";
-        const ogAbi = [{
-          "inputs": [ {"internalType": "bytes32","name": "_name","type": "bytes32"},
-                      {"internalType": "string","name": "_key","type": "string"}],
-          "name": "getTextRecord",
-          "outputs": [{"internalType": "string","name": "","type": "string"}],
-          "stateMutability": "view",
-          "type": "function"
-        }];
-
         contentContractTxt = await web3Client.readContract({ 
-          address: ogAddress,
-          abi: ogAbi,
+          address: linagee.address,
+          abi: linagee.abi,
           functionName: "getTextRecord",
-          args: [domainBytes32, 'contentcontract']
+          args: [linagee.domainAsBytes32(ensNormalize(domainName)), 'contentcontract']
         });
-
-        console.log("Content Contract:", contentContractTxt);
       }
 
       // contentcontract TXT case
@@ -122,7 +113,18 @@ const registerWeb3Protocol = (web3Chains) => {
       }
       // No contentcontract TXT
       else {
-        result.address = await resolveDomainName(domainName, web3Client);
+        if(domainName.endsWith('.eth')){
+          result.address = await resolveDomainName(domainName, web3Client);
+        }
+        else if(domainName.endsWith('.og')){
+          result.address = await web3Client.readContract({ 
+            address: linagee.address,
+            abi: linagee.abi,
+            functionName: "resolve",
+            args: [ensNormalize(domainName)]
+          });
+        }
+        
       }
     }
     // All other domains

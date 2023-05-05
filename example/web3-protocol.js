@@ -113,18 +113,7 @@ const registerWeb3Protocol = (web3Chains) => {
       }
       // No contentcontract TXT
       else {
-        if(domainName.endsWith('.eth')){
-          result.address = await resolveDomainName(domainName, web3Client);
-        }
-        else if(domainName.endsWith('.og')){
-          result.address = await web3Client.readContract({ 
-            address: linagee.address,
-            abi: linagee.abi,
-            functionName: "resolve",
-            args: [ensNormalize(domainName)]
-          });
-        }
-        
+        result.address = await resolveDomainName(domainName, web3Client);
       }
     }
     // All other domains

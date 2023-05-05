@@ -192,7 +192,7 @@ const registerWeb3Protocol = (web3Chains) => {
     {
       type: 'string',
       autoDetectable: false,
-      parse: async (x, web3Client) => x,
+      parse: async (x, web3Client) => decodeURIComponent(x),
     },
   ];
 
@@ -342,7 +342,13 @@ const registerWeb3Protocol = (web3Chains) => {
 
     // Process a manual mode call or an frontpage auto-mode
     if(contractMode == 'manual' || contractMode == "auto" && pathnameParts.length == 2 && pathnameParts[1] == "") {
-      let callData = url.pathname + (Array.from(url.searchParams.values()).length > 0 ? "?" + url.searchParams : "");
+      // DecodeURI the pathname
+      let callData = decodeURIComponent(url.pathname);
+      // Rebuild manually the searchParams to avoid URIEncoding
+      let searchParamsEntries = Array.from(url.searchParams.entries());
+      if(searchParamsEntries.length > 0) {
+        callData += "?" + searchParamsEntries.map(x => x[0] + "=" + x[1]).join("&");
+      }
       try {
         let serializedCallData = "0x" + Buffer.from(callData).toString('hex')
         // If auto mode and calling the frontpage : the callData must be empty

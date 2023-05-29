@@ -2,41 +2,16 @@ const { app, protocol, ipcMain } = require('electron');
 const fileUrl = require('file-url');
 const BrowserLikeWindow = require('../index');
 
-let web3Chains = require('viem/chains');
 const yargs = require("yargs");
 const { fetch } = require("undici");
 global.fetch = fetch;
 const fs = require('fs')
-// const {chains: ethChainsPkgWeb3Chains } = require('eth-chains')
-// Temporary until the above package has auto-update activated (looks like it is coming very soon)
-const chainsJsonFileChains = require('./web3-chains.js')
 
 const { registerWeb3Protocol } = require('./web3-protocol.js')
 const { registerEvmProtocol } = require('./evm-protocol.js')
 
 let browser;
 
-
-//
-// Add missing chains to the viem chains
-//
-
-Object.values(chainsJsonFileChains).map(chainsJsonFileChain => {
-  let alreadyDefinedChain = Object.values(web3Chains).find(chain => chain.id == chainsJsonFileChain.chainId) || null
-  if(alreadyDefinedChain == null) {
-    // Add the custom chain on the list
-    let key = 'custom-' + chainsJsonFileChain.chainId
-    web3Chains[key] = {
-      id: chainsJsonFileChain.chainId,
-      name: key,
-      network: key,
-      rpcUrls: {
-        public: { http: chainsJsonFileChain.rpc },
-        default: { http: chainsJsonFileChain.rpc },
-      }
-    }    
-  }
-})
 
 
 //
@@ -59,6 +34,7 @@ yargs
 let args = yargs.parse()
 
 // Add/override chain definitions
+let web3ChainOverrides = []
 if(args.web3Chain) {
   if((args.web3Chain instanceof Array) == false) {
     args.web3Chain = [args.web3Chain]
@@ -76,28 +52,10 @@ if(args.web3Chain) {
     }
     let chainRpcUrl = newChainComponents.slice(1).join("=");
 
-    // Check if chain already defined
-    let alreadyDefinedChain = Object.entries(web3Chains).find(chain => chain[1].id == chainId) || null
-    if(alreadyDefinedChain) {
-      let chainKey = alreadyDefinedChain[0];
-      web3Chains[chainKey].rpcUrls.default.http = [chainRpcUrl]
-      web3Chains[chainKey].rpcUrls.default.webSocket = undefined
-      web3Chains[chainKey].rpcUrls.public.http = [chainRpcUrl]
-      web3Chains[chainKey].rpcUrls.public.webSocket = undefined
-    }
-    else {
-      // Add the custom chain on the list
-      let key = 'custom-' + chainId
-      web3Chains[key] = {
-        id: parseInt(chainId),
-        name: key,
-        network: key,
-        rpcUrls: {
-          public: { http: [chainRpcUrl] },
-          default: { http: [chainRpcUrl] },
-        }
-      }
-    }
+    web3ChainOverrides.push({
+      id: chainId,
+      rpcUrls: [chainRpcUrl]
+    })
   })
 }
 
@@ -137,7 +95,7 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 app.on('ready', async () => {
-  registerWeb3Protocol(web3Chains);
+  registerWeb3Protocol(web3ChainOverrides);
   // To be removed later
   // registerEvmProtocol(web3Chains);
 

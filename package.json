@@ -32,9 +32,8 @@
     "electron-squirrel-startup": "^1.0.0",
     "eth-provider": "^0.13.6",
     "file-url": "^2.0.2",
-    "mime-types": "^2.1.35",
     "undici": "^5.20.0",
-    "viem": "^0.2.0",
+    "web3protocol": "0.1.1",
     "webpack": "^5.76.1",
     "webpack-cli": "^5.0.1",
     "yargs": "^17.7.1"

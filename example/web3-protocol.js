@@ -34,9 +34,9 @@ const registerWeb3Protocol = (web3ChainOverrides) => {
       }
       else if(parsedUrl.contractCallMode == 'method') {
         debuggingHeaders['web3-auto-method'] = parsedUrl.methodName
-        debuggingHeaders['web3-auto-method-arg-types'] = JSON.stringify(parsedUrl.methodArgTypes)
+        debuggingHeaders['web3-auto-method-arg'] = JSON.stringify(parsedUrl.methodArgs)
         debuggingHeaders['web3-auto-method-arg-values'] = JSON.stringify(parsedUrl.methodArgValues)
-        debuggingHeaders['web3-auto-method-return'] = JSON.stringify(parsedUrl.methodReturnTypes)
+        debuggingHeaders['web3-auto-method-return'] = JSON.stringify(parsedUrl.methodReturn)
       }
 
       // Make the call
@@ -49,10 +49,9 @@ const registerWeb3Protocol = (web3ChainOverrides) => {
 
       // Send to the browser
       callback({ 
-        statusCode: 200, 
-        mimeType: callResult.mimeType, 
+        statusCode: callResult.httpCode, 
         data: stream,
-        headers: debuggingHeaders })
+        headers: Object.assign({}, callResult.httpHeaders, debuggingHeaders) })
       return;
     }
     catch(err) {

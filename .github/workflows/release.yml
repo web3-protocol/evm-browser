@@ -33,7 +33,11 @@ jobs:
 
 
   publish-windows:
-    runs-on: windows-latest
+    # Building on windows fails with
+    # error An unexpected error occurred: "https://registry.yarnpkg.com/viem/-/viem-0.3.37.tgz: ESOCKETTIMEDOUT".
+    # Since we are only making a zip, we don't need to be on windows, let make it on ubuntu
+    # runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 

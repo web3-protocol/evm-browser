@@ -54,7 +54,7 @@ jobs:
         run: yarn install
 
       - name: Publish
-        run: yarn run publish
+        run: yarn run publish -p win32
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

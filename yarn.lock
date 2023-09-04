@@ -2025,6 +2025,11 @@ before-after-hook@^2.2.0:
   resolved "https://registry.yarnpkg.com/before-after-hook/-/before-after-hook-2.2.3.tgz#c51e809c81a4e354084422b9b26bad88249c517c"
   integrity sha512-NzUnlZexiaH/46WDhANlyR2bXRopNg4F/zuSA3OpZnllCUgRaOF2znDioDWrmbNVsuZk6l9pMquQB38cfBZwkQ==
 
+bignumber.js@^9.0.0:
+  version "9.1.2"
+  resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.1.2.tgz#b7c4242259c008903b13707983b5f4bbd31eda0c"
+  integrity sha512-2/mKyZH9K85bzOEfhXDBFZTGd1CTs+5IHpeFQo9luiBG7hghdC851Pj2WAhb6E3R6b9tZj/XKhbg4fum+Kepug==
+
 binary-extensions@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
@@ -3443,6 +3448,13 @@ jsesc@~0.5.0:
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-0.5.0.tgz#e7dee66e35d6fc16f710fe91d5cf69f70f08911d"
   integrity sha1-597mbjXW/Bb3EP6R1c9p9w8IkR0=
+
+json-bigint@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/json-bigint/-/json-bigint-1.0.0.tgz#ae547823ac0cad8398667f8cd9ef4730f5b01ff1"
+  integrity sha512-SiPv/8VpZuWbvLSMtTDU8hEfrZWg/mH/nV/b4o0CYbSxu1UIQPLdwKOCIyLQX+VIPO5vrLX3i8qtqFyhdPSUSQ==
+  dependencies:
+    bignumber.js "^9.0.0"
 
 json-buffer@3.0.1:
   version "3.0.1"
@@ -5110,11 +5122,12 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-web3protocol@0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/web3protocol/-/web3protocol-0.2.0.tgz#5b989b1a378ac98209daf2281bf1f0b4a0051082"
-  integrity sha512-/fuMvPbqibDnWiLw34uX64/9DFVPOtn0MxOMR959l2KequjVeEF6ZAB/HDZtYelivPM/u0pCJSftC5FLOk/UsQ==
+web3protocol@0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/web3protocol/-/web3protocol-0.2.1.tgz#a62f656a23bc6b5e1bb88420a36c0b3f4fe90673"
+  integrity sha512-fhSuz8N/aYN/gB1wBYlgNchCy2oAnE/iKlomLSq8wp8KwOJzV0Kqk5D4dfYhff276e0D/KvJHU8oVh4yPlm3CQ==
   dependencies:
+    json-bigint "1.0.0"
     mime-types "^2.1.35"
     viem "^0.3.19"
 

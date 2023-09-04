@@ -51,7 +51,8 @@ const registerWeb3Protocol = (web3ChainOverrides) => {
       callback({ 
         statusCode: callResult.httpCode, 
         data: stream,
-        headers: Object.assign({}, callResult.httpHeaders, debuggingHeaders) })
+        headers: Object.assign({}, callResult.httpHeaders, debuggingHeaders) 
+      })
       return;
     }
     catch(err) {

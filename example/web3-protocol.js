@@ -1,7 +1,8 @@
 const { protocol } = require('electron');
 const { PassThrough } = require('stream')
 
-const { parseUrl, fetchParsedUrl } = require('web3protocol');
+const { Client } = require('web3protocol');
+const { getDefaultChainList } = require('web3protocol/src/chains');
 
 //
 // EIP-4808 web3:// protocol
@@ -13,14 +14,35 @@ const registerWeb3Protocol = (web3ChainOverrides) => {
   let result = protocol.registerStreamProtocol("web3", async (request, callback) => {
     let debuggingHeaders = {}
 
-    try {
-      // web3protocol options : chain overrides
-      let opts = {
-        chains: web3ChainOverrides
-      }
+    // Get the default chains
+    let chainList = getDefaultChainList()
+    
+    // Handle the overrides
+    web3ChainOverrides.forEach(chainOverride => {
+      // Find if the chain already exist
+      let alreadyDefinedChain = Object.entries(chainList).find(chain => chain[1].id == chainOverride.id) || null
 
+      // If it exists, override RPCs
+      if(alreadyDefinedChain) {
+        chainList[alreadyDefinedChain[0]].rpcUrls = [...chainOverride.rpcUrls]
+      }
+      // If does not exist, create it
+      else {
+        let newChain = {
+          id: chainOverride.id,
+          name: 'custom-' + chainOverride.id,
+          rpcUrls: [...chainOverride.rpcUrls],
+        }
+        chainList.push(newChain)
+      }
+    })
+
+    // Create the web3Client
+    let web3Client = new Client(chainList)
+
+    try {
       // Parse the web3:// URL
-      let parsedUrl = await parseUrl(request.url, opts)
+      let parsedUrl = await web3Client.parseUrl(request.url)
 
       // Fill the debugging headers
       if(parsedUrl.nameResolution.chainId) {
@@ -40,7 +62,8 @@ const registerWeb3Protocol = (web3ChainOverrides) => {
       }
 
       // Make the call
-      let callResult = await fetchParsedUrl(parsedUrl, opts)
+      let contractReturn = await web3Client.fetchContractReturn(parsedUrl)
+      let callResult = await web3Client.processContractReturn(parsedUrl, contractReturn)
 
       // Convert the output to a stream
       const stream = new PassThrough()

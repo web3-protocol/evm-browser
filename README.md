@@ -1,6 +1,6 @@
 # EVM Browser
 
-Web browser with support of the [EIP-4804 `web3://` protocol](https://eips.ethereum.org/EIPS/eip-4804), which can show on-chain websites hosted on Ethereum and all others EVM chains.
+Web browser with support of the [ERC-6860](https://eips.ethereum.org/EIPS/eip-6860) ``web3://`` protocol, which can show on-chain websites hosted on Ethereum and all others EVM chains.
 
 ![./screenshot2.png](./screenshot2.png)
 

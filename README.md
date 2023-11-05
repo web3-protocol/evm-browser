@@ -30,7 +30,7 @@ Call the ``tokenHTML`` method of ``0x5a985f13345e820aa9618826b85f74c3986e1463`` 
 
 ``web3://0x5a985f13345e820aa9618826b85f74c3986e1463:5/tokenSVG/2?mime.type=svg``
 
-Call the ``tokenSVG`` method of ``0x5a985f13345e820aa9618826b85f74c3986e1463`` on goerli, gives the uint 2 as an argument, and return the result as ``image/svg+xml``. **Not supported yet :** Pending [ERC-7087](https://github.com/ethereum/EIPs/pull/7087) need to be merged first. Previously ``/tokenSVG/2.svg`` was advertised, which was incorrect.
+Call the ``tokenSVG`` method of ``0x5a985f13345e820aa9618826b85f74c3986e1463`` on goerli, gives the uint 2 as an argument, and return the result as ``image/svg+xml``. 
 
 ``web3://0x76010876050387FA66E28a1883aD73d576D88Bf2:5/levelAndTile/2/50?returns=(uint256,uint256)``
 

@@ -57,7 +57,8 @@ const registerWeb3Protocol = (web3ChainOverrides) => {
       else if(parsedUrl.contractCallMode == 'method') {
         debuggingHeaders['web3-auto-method'] = parsedUrl.methodName
         debuggingHeaders['web3-auto-method-arg'] = JSON.stringify(parsedUrl.methodArgs)
-        debuggingHeaders['web3-auto-method-arg-values'] = JSON.stringify(parsedUrl.methodArgValues)
+        debuggingHeaders['web3-auto-method-arg-values'] = JSON.stringify(parsedUrl.methodArgValues, 
+      (key, value) => typeof value === "bigint" ? "0x" + value.toString(16) : value)
         debuggingHeaders['web3-auto-method-return'] = JSON.stringify(parsedUrl.methodReturn)
       }
 

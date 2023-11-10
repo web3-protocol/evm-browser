@@ -33,7 +33,7 @@
     "eth-provider": "^0.13.6",
     "file-url": "^2.0.2",
     "undici": "^5.20.0",
-    "web3protocol": "0.3.0",
+    "web3protocol": "0.3.3",
     "webpack": "^5.76.1",
     "webpack-cli": "^5.0.1",
     "yargs": "^17.7.1"

@@ -5114,10 +5114,10 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-web3protocol@0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/web3protocol/-/web3protocol-0.3.0.tgz#e1c25423516e4563d329101b930fdf31fcca169f"
-  integrity sha512-O4EfCl5Ol2i9/avrUGDUi8FqXDL/+TxdtqvuDcNDc8gLSR4M7ZyRysn1vyu4V794GN/GlCV3yHvobVX7yanU4w==
+web3protocol@0.3.3:
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/web3protocol/-/web3protocol-0.3.3.tgz#adfc57643cc4c139f4ae30120432457021213cd8"
+  integrity sha512-arYJ0BctnCHOxP1focFSWYwCTFTt3W6JwoyfdH8clLAtBPIfS4I89+pu7NDi/8FKIgCNytADOWvm/6KF5iErYg==
   dependencies:
     mime-types "^2.1.35"
     viem "1.17.2"

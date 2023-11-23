@@ -1,15 +1,15 @@
 const { protocol } = require('electron');
 const { PassThrough } = require('stream')
 
-const { Client } = require('web3protocol');
-const { getDefaultChainList } = require('web3protocol/src/chains');
-
 //
 // EIP-4808 web3:// protocol
 //
 
-const registerWeb3Protocol = (web3ChainOverrides) => {
+const registerWeb3Protocol = async (web3ChainOverrides) => {
 
+  // Import the web3protocol (esm) the commonjs way
+  const { Client } = await import('web3protocol');
+  const { getDefaultChainList } = await import('web3protocol/chains');
 
   let result = protocol.registerStreamProtocol("web3", async (request, callback) => {
     let debuggingHeaders = {}

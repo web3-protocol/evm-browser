@@ -3,7 +3,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 module.exports = [
   {
     mode: 'production',
-    entry: './example/eth-provider-injected.js',
+    entry: './src/eth-provider-injected.js',
     output: {
       filename: 'eth-provider-injected.packed.js',
       path: `${__dirname}/dist`,
@@ -11,10 +11,10 @@ module.exports = [
   },
   {
     mode: 'production',
-    entry: './example/renderer/control.jsx',
+    entry: './src/renderer/control.jsx',
     output: {
       filename: 'control-compiled.js',
-      path: `${__dirname}/example/renderer`,
+      path: `${__dirname}/src/renderer`,
     },
     target: 'electron-renderer',
     module: {

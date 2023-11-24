@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import cx from 'classnames';
-import useConnect from '../../useConnect';
-import * as action from '../../control';
+import useConnect from './useConnect';
+import * as action from './control';
 
 const IconLoading = () => (
   <svg

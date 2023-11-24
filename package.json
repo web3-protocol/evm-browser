@@ -6,21 +6,16 @@
     "browser",
     "web3"
   ],
-  "main": "example/main.js",
+  "main": "src/index.js",
   "author": "nand, hui.liu",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/nand2/evm-browser"
   },
-  "files": [
-    "index.js",
-    "useConnect.js",
-    "control.js"
-  ],
   "scripts": {
-    "start:control-dev": "npx babel --watch example/renderer/control.jsx --out-file example/renderer/control-compiled.js",
-    "start:control": "npx babel example/renderer/control.jsx --out-file example/renderer/control-compiled.js",
+    "start:control-dev": "npx babel --watch src/renderer/control.jsx --out-file src/renderer/control-compiled.js",
+    "start:control": "npx babel src/renderer/control.jsx --out-file src/renderer/control-compiled.js",
     "start:webpack": "npx webpack",
     "start": "electron-forge start",
     "package": "electron-forge package",

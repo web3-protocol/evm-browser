@@ -1,14 +1,13 @@
 const { app, protocol, ipcMain } = require('electron');
 const fileUrl = require('file-url');
-const BrowserLikeWindow = require('../index');
 
 const yargs = require("yargs");
 const { fetch } = require("undici");
 global.fetch = fetch;
 const fs = require('fs')
 
+const BrowserLikeWindow = require('./browser-like-window.js');
 const { registerWeb3Protocol } = require('./web3-protocol.js')
-const { registerEvmProtocol } = require('./evm-protocol.js')
 
 let browser;
 

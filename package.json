@@ -1,6 +1,6 @@
 {
   "name": "evm-browser",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Browser with web3:// support.",
   "keywords": [
     "browser",

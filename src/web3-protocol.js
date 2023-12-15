@@ -1,8 +1,9 @@
 const { protocol } = require('electron');
-const { PassThrough } = require('stream')
+const { PassThrough } = require('stream');
+const { Readable } = require('stream');
 
 //
-// EIP-4808 web3:// protocol
+// EIP-6860 web3:// protocol
 //
 
 const registerWeb3Protocol = async (web3ChainOverrides) => {
@@ -66,15 +67,10 @@ const registerWeb3Protocol = async (web3ChainOverrides) => {
       let contractReturn = await web3Client.fetchContractReturn(parsedUrl)
       let callResult = await web3Client.processContractReturn(parsedUrl, contractReturn)
 
-      // Convert the output to a stream
-      const stream = new PassThrough()
-      stream.push(callResult.output)
-      stream.push(null)
-
       // Send to the browser
       callback({ 
         statusCode: callResult.httpCode, 
-        data: stream,
+        data: new JavaScriptToNodeReadable(callResult.output),
         headers: Object.assign({}, callResult.httpHeaders, debuggingHeaders) 
       })
       return;
@@ -107,5 +103,28 @@ const registerWeb3Protocol = async (web3ChainOverrides) => {
 
   console.log('Web3 protocol registered: ', result)
 }
+
+// Create a Node.js ReadableStream from a JS ReadableStream
+class JavaScriptToNodeReadable extends Readable {
+  constructor(jsReadableStream, options) {
+    super(options);
+    this.reader = jsReadableStream.getReader();
+  }
+
+  // Implement the _read method to fulfill the ReadableStream contract
+  _read() {
+    // Use the reader from the browser-based ReadableStream to read chunks
+    this.reader.read().then(({ done, value }) => {
+      if (done) {
+        this.push(null);
+      } else {
+        this.push(value);
+      }
+    }).catch((error) => {
+      this.emit('error', error);
+    });
+  }
+}
+
 
 module.exports = { registerWeb3Protocol }

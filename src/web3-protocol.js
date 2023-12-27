@@ -12,34 +12,35 @@ const registerWeb3Protocol = async (web3ChainOverrides) => {
   const { Client } = await import('web3protocol');
   const { getDefaultChainList } = await import('web3protocol/chains');
 
+  // Get the default chains
+  let chainList = getDefaultChainList()
+  
+  // Handle the overrides
+  web3ChainOverrides.forEach(chainOverride => {
+    // Find if the chain already exist
+    let alreadyDefinedChain = Object.entries(chainList).find(chain => chain[1].id == chainOverride.id) || null
+
+    // If it exists, override RPCs
+    if(alreadyDefinedChain) {
+      chainList[alreadyDefinedChain[0]].rpcUrls = [...chainOverride.rpcUrls]
+    }
+    // If does not exist, create it
+    else {
+      let newChain = {
+        id: chainOverride.id,
+        name: 'custom-' + chainOverride.id,
+        rpcUrls: [...chainOverride.rpcUrls],
+      }
+      chainList.push(newChain)
+    }
+  })
+
+  // Create the web3Client
+  let web3Client = new Client(chainList)
+
+  // Process a web3:// call
   let result = protocol.registerStreamProtocol("web3", async (request, callback) => {
     let debuggingHeaders = {}
-
-    // Get the default chains
-    let chainList = getDefaultChainList()
-    
-    // Handle the overrides
-    web3ChainOverrides.forEach(chainOverride => {
-      // Find if the chain already exist
-      let alreadyDefinedChain = Object.entries(chainList).find(chain => chain[1].id == chainOverride.id) || null
-
-      // If it exists, override RPCs
-      if(alreadyDefinedChain) {
-        chainList[alreadyDefinedChain[0]].rpcUrls = [...chainOverride.rpcUrls]
-      }
-      // If does not exist, create it
-      else {
-        let newChain = {
-          id: chainOverride.id,
-          name: 'custom-' + chainOverride.id,
-          rpcUrls: [...chainOverride.rpcUrls],
-        }
-        chainList.push(newChain)
-      }
-    })
-
-    // Create the web3Client
-    let web3Client = new Client(chainList)
 
     try {
       // Parse the web3:// URL

@@ -1,6 +1,11 @@
 const { ipcRenderer } = require('electron')
 
 window.onload = async function() {
+    // Only inject eth-provider is there is a document body (e.g. not for SVGs)
+    if(document.body == null) {
+        return
+    }
+
     // Fetch the JS of eth-provider being exposed on window.ethereum
     // (Cannot use file reading here)
     let webpackedScript = await ipcRenderer.invoke('getEthProviderJs')

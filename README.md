@@ -1,6 +1,6 @@
 # EVM Browser
 
-Web browser with support of the [ERC-6860](https://eips.ethereum.org/EIPS/eip-6860) ``web3://`` protocol, which can show on-chain websites hosted on Ethereum and all others EVM chains. It includes support for the [Frame.sh](https://frame.sh/) wallet.
+Web browser with support of the [ERC-6860 / ERC-4804](https://eips.ethereum.org/EIPS/eip-6860) ``web3://`` protocol, which can show on-chain websites hosted on Ethereum and all others EVM chains. It includes support for the [Frame.sh](https://frame.sh/) wallet.
 
 ![./screenshot2.png](./screenshot2.png)
 

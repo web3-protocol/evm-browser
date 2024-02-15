@@ -6,11 +6,7 @@ Web browser with support of the [ERC-6860 / ERC-4804 ``web3://`` protocol](https
 
 As an example, ``web3://terraformnavigator.eth/`` is an on-chain website served by a [smart contract](https://etherscan.io/address/0xad41bf1c7f22f0ec988dac4c0ae79119cab9bb7e#code), which interacts with the [Terraform NFT contract](https://etherscan.io/address/0x4e1f41613c9084fdb9e34e11fae9412427480e56#code) : pages are generated dynamically, these are not static pages.
 
-The browser works out of the box with all chains (providers are given by [viem.sh](https://viem.sh/) and [chainid.network](https://chainid.network/)) and support the [Frame.sh](https://frame.sh/) wallet.
-
-ENS domain name resolution ([proposed EIP-6821](https://ethereum-magicians.org/t/eip-6821-support-ens-name-for-web3-url/13654)) happens via the declaration of a ``contentcontract`` TXT record containing a [EIP-3770 chain-specific address](https://eips.ethereum.org/EIPS/eip-3770), or, if not present, via a standard resolution.
-
-Browser forked from the great [electron-as-browser](https://github.com/hulufei/electron-as-browser) from hulufei.
+The browser works out of the box with all chains (providers are given by [viem.sh](https://viem.sh/) and [chainid.network](https://chainid.network/)) and support the [Frame.sh](https://frame.sh/) wallet. The browser is forked from the great [electron-as-browser](https://github.com/hulufei/electron-as-browser) from hulufei.
 
 In the above example, clicking on a terraform will load a dynamic page, for example : 
 
@@ -34,11 +30,13 @@ Call the ``tokenSVG`` method of ``0x5a985f13345e820aa9618826b85f74c3986e1463`` o
 
 ``web3://0x76010876050387FA66E28a1883aD73d576D88Bf2:5/levelAndTile/2/50?returns=(uint256,uint256)``
 
-Returns 2 numbers from this contract method, whose arguments are 2 and 50. The output will be casted as JSON : ``["1","36"]``
+Returns 2 numbers from this contract method, whose arguments are 2 and 50. The output will be casted as JSON : ``["0x1","0x24"]``
 
 ``web3://0x1f9840a85d5af5bf1d1762f925bdaddc4201f984/balanceOf/obok.eth?returns=(uint256)``
 
 Call the ``balanceOf`` method of ``0x1f9840a85d5af5bf1d1762f925bdaddc4201f984`` with ``obok.eth`` resolved to this address as an argument.
+
+See the [ ``web3://`` protocol documentation](https://docs.web3url.io/) for more infos.
 
 
 

@@ -119,14 +119,15 @@ function Control() {
     const v = e.target.value.trim();
     if (!v) return;
 
+    // If we don't have a protocol, add web3:// by default
     let href = v;
     if (!/^.*?:\/\//.test(v)) {
-      if(/^[a-z0-9-]+\.eth\/?/.test(v)) {
+      // if(/^[a-z0-9-]+\.eth\/?/.test(v)) {
         href = `web3://${v}`;
-      }
-      else {
-        href = `http://${v}`;
-      }
+      // }
+      // else {
+      //   href = `http://${v}`;
+      // }
     }
 
     // If we have a web3 url without the initial "/", add it

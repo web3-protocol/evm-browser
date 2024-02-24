@@ -24,6 +24,12 @@ yargs
     type: 'string',
     description: "Add/override a chain definition\nFormat: <chain-id>=<rpc-provider-url> \nMultiple can be provided with multiple --web3-chain use. Override existing chain settings. Examples:\n1=https://eth-mainnet.alchemyapi.io/v2/<your_api_key>\n42170=https://nova.arbitrum.io/rpc\n 5=http://127.0.0.1:8545"
   })
+  .option('enable-http-https', {
+    alias: 'http',
+    type: 'boolean',
+    default: false,
+    description: "Activate HTTP/HTTPS"
+  })
   .option('debug', {
     type: 'boolean',
     // Activate by default for dev work
@@ -94,7 +100,28 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 app.on('ready', async () => {
+  // Enable web3://
   await registerWeb3Protocol(web3ChainOverrides);
+
+  // Disable HTTP/HTTPS if not explicitely enabled
+  // By default : web3:// only
+  if(args.enableHttpHttps == false) {
+    // Disable HTTPS
+    protocol.handle('https', (req) => {
+      return new Response('HTTPS support is disabled. Enable with the --enable-http-https start option.', {
+        status: 400,
+        headers: { 'content-type': 'text/html' }
+      })
+    });
+
+    // Disable HTTP
+    protocol.handle('http', (req) => {
+      return new Response('HTTP support is disabled. Enable with the --enable-http-https start option.', {
+        status: 400,
+        headers: { 'content-type': 'text/html' }
+      })
+    });
+  }
 
   createWindow();
 });

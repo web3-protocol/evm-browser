@@ -197,6 +197,7 @@ function Control() {
           </div>
           <input
             className="address"
+            spellcheck="false"
             value={tabs[activeID] !== undefined && tabs[activeID].url !== undefined ? tabs[activeID].url : ''}
             onChange={onUrlChange}
             onKeyDown={onPressEnter}

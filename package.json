@@ -1,7 +1,7 @@
 {
   "name": "evm-browser",
   "version": "0.1.12",
-  "description": "Browser with web3:// support.",
+  "description": "web3:// web browser",
   "keywords": [
     "browser",
     "web3"
@@ -46,7 +46,7 @@
     "@electron-forge/publisher-github": "^6.1.1",
     "babel-loader": "^9.1.2",
     "classnames": "^2.2.6",
-    "electron": "^24.0.0",
+    "electron": "^29.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
   }

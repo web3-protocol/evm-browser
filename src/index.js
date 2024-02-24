@@ -95,8 +95,6 @@ protocol.registerSchemesAsPrivileged([
 
 app.on('ready', async () => {
   await registerWeb3Protocol(web3ChainOverrides);
-  // To be removed later
-  // registerEvmProtocol(web3Chains);
 
   createWindow();
 });

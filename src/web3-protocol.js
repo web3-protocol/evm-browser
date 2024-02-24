@@ -39,7 +39,7 @@ const registerWeb3Protocol = async (web3ChainOverrides) => {
   let web3Client = new Client(chainList)
 
   // Process a web3:// call
-  let result = protocol.registerStreamProtocol("web3", async (request, callback) => {
+  let result = protocol.handle("web3", async (request) => {
     let debuggingHeaders = {}
 
     try {
@@ -69,16 +69,14 @@ const registerWeb3Protocol = async (web3ChainOverrides) => {
       let callResult = await web3Client.processContractReturn(parsedUrl, contractReturn)
 
       // Send to the browser
-      callback({ 
-        statusCode: callResult.httpCode, 
-        data: new JavaScriptToNodeReadable(callResult.output),
+      return new Response(new JavaScriptToNodeReadable(callResult.output), { 
+        status: callResult.httpCode, 
         headers: Object.assign({}, callResult.httpHeaders, debuggingHeaders) 
       })
       return;
     }
     catch(err) {
-      displayError(err.toString(), callback, debuggingHeaders)
-      return;
+      return displayError(err.toString(), debuggingHeaders)
     }
   })
 
@@ -87,19 +85,20 @@ const registerWeb3Protocol = async (web3ChainOverrides) => {
   // Utilities
   //
 
-  // Display an error on the browser. callbackFunction is the callback from registerStreamProtocol
-  const displayError = (errorText, callbackFunction, debuggingHeaders) => {
+  // Display an error on the browser.
+  const displayError = (errorText, debuggingHeaders) => {
     output = '<html><head><meta charset="utf-8" /></head><body><pre>' + errorText + '</pre></body></html>';
 
     const stream = new PassThrough()
     stream.push(output)
     stream.push(null)
 
-    callbackFunction({ 
-      statusCode: 500, 
-      mimeType: 'text/html', 
-      data: stream,
-      headers: debuggingHeaders })
+    debuggingHeaders['Content-Type'] = 'text/html';
+
+    return new Response(stream, { 
+      status: 500, 
+      headers: debuggingHeaders 
+    })
   }
 
   console.log('Web3 protocol registered: ', result)

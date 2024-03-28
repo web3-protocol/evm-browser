@@ -5259,10 +5259,10 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-web3protocol@0.5.8:
-  version "0.5.8"
-  resolved "https://registry.yarnpkg.com/web3protocol/-/web3protocol-0.5.8.tgz#6997011900c2ff16bf367df3f038b229a39e349b"
-  integrity sha512-7T/N/V2zAt/hnk8GXFu5VNAYpqxhbi5h2fnnCIH94Toe1IxVAoFgUzHqJBeyCu4/zEe1DyHZABFD3SEuIuznuw==
+web3protocol@0.5.11:
+  version "0.5.11"
+  resolved "https://registry.yarnpkg.com/web3protocol/-/web3protocol-0.5.11.tgz#54c99bd7e8d4ac42098ef98b9cb0c2d4da642eee"
+  integrity sha512-Fz+cNNlpM+/tvl6rTZFdzMyoycq4M8JX96WSAPsrx53x/hlRf8Z2vuwvCcPuoEJRpVGUC8KUCwEghIkQlDF47A==
   dependencies:
     brotli-wasm "2.0.1"
     buffer "6.0.3"

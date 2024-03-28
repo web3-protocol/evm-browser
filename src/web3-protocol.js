@@ -6,7 +6,7 @@ const { Readable } = require('stream');
 // EIP-6860 web3:// protocol
 //
 
-const registerWeb3Protocol = async (web3ChainOverrides) => {
+const registerWeb3Protocol = async (chainRpcOverrides, chainEnsOverrides) => {
 
   // Import the web3protocol (esm) the commonjs way
   const { Client } = await import('web3protocol');
@@ -15,8 +15,8 @@ const registerWeb3Protocol = async (web3ChainOverrides) => {
   // Get the default chains
   let chainList = getDefaultChainList()
   
-  // Handle the overrides
-  web3ChainOverrides.forEach(chainOverride => {
+  // Handle the RPC overrides
+  chainRpcOverrides.forEach(chainOverride => {
     // Find if the chain already exist
     let alreadyDefinedChain = Object.entries(chainList).find(chain => chain[1].id == chainOverride.id) || null
 
@@ -32,6 +32,22 @@ const registerWeb3Protocol = async (web3ChainOverrides) => {
         rpcUrls: [...chainOverride.rpcUrls],
       }
       chainList.push(newChain)
+    }
+  })
+
+  // Handle the ENS registry overrides
+  chainEnsOverrides.forEach(chainOverride => {
+    // Find if the chain already exist
+    let alreadyDefinedChain = Object.entries(chainList).find(chain => chain[1].id == chainOverride.id) || null
+
+    // If it exists, override ENS registry
+    if(alreadyDefinedChain) {
+      if(chainList[alreadyDefinedChain[0]].contracts === undefined) {
+        chainList[alreadyDefinedChain[0]].contracts = {}
+      }
+      chainList[alreadyDefinedChain[0]].contracts.ensRegistry = {
+        address: chainOverride.ensRegistry
+      }
     }
   })
 

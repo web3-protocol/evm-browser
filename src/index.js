@@ -19,10 +19,16 @@ let browser;
 
 yargs
   .usage("evm-browser <start-url> [options]")
-  .option('web3-chain', {
+  .option('chain-rpc', {
     alias: 'wc',
     type: 'string',
-    description: "Add/override a chain definition\nFormat: <chain-id>=<rpc-provider-url> \nMultiple can be provided with multiple --web3-chain use. Override existing chain settings. Examples:\n1=https://eth-mainnet.alchemyapi.io/v2/<your_api_key>\n42170=https://nova.arbitrum.io/rpc\n 5=http://127.0.0.1:8545"
+    description: "Add/override a chain RPC\nFormat: <chain-id>=<rpc-provider-url> \nMultiple can be provided with multiple --chain-rpc use. Override existing chain settings. Examples:\n1=https://eth-mainnet.alchemyapi.io/v2/<your_api_key>\n42170=https://nova.arbitrum.io/rpc\n 5=http://127.0.0.1:8545"
+  })
+  .option('chain-ens-registry', {
+    alias: 'ens',
+    type: 'string',
+    requiresArg: true,
+    description: "Add/override a chain ENS registry\nFormat: <chain-id>=<ens-registry-address> \nCan be used multiple times. Examples:\n1=0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e\n 31337=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
   })
   .option('enable-http-https', {
     alias: 'http',
@@ -39,13 +45,13 @@ yargs
 let args = yargs.parse()
 
 // Add/override chain definitions
-let web3ChainOverrides = []
-if(args.web3Chain) {
-  if((args.web3Chain instanceof Array) == false) {
-    args.web3Chain = [args.web3Chain]
+let chainRpcOverrides = []
+if(args.chainRpc) {
+  if((args.chainRpc instanceof Array) == false) {
+    args.chainRpc = [args.chainRpc]
   }
 
-  args.web3Chain.map(newChain => newChain.split('=')).map(newChainComponents => {
+  args.chainRpc.map(newChain => newChain.split('=')).map(newChainComponents => {
     if(newChainComponents.length <= 1) {
       console.log("Chain format is invalid");
       process.exit(1)
@@ -57,13 +63,38 @@ if(args.web3Chain) {
     }
     let chainRpcUrl = newChainComponents.slice(1).join("=");
 
-    web3ChainOverrides.push({
+    chainRpcOverrides.push({
       id: chainId,
       rpcUrls: [chainRpcUrl]
     })
   })
 }
 
+// Add/override ENS registry address
+let chainEnsOverrides = []
+if(args.chainEnsRegistry) {
+  if((args.chainEnsRegistry instanceof Array) == false) {
+    args.chainEnsRegistry = [args.chainEnsRegistry]
+  }
+
+  args.chainEnsRegistry.map(newChain => newChain.split('=')).map(newChainComponents => {
+    if(newChainComponents.length <= 1) {
+      console.log("Chain format is invalid");
+      process.exit(1)
+    }
+    let chainId = parseInt(newChainComponents[0]);
+    if(isNaN(chainId) || chainId <= 0) {
+      console.log("Chain id is invalid");
+      process.exit(1)
+    }
+    let chainEnsRegistry = newChainComponents.slice(1).join("=");
+
+    chainEnsOverrides.push({
+      id: chainId,
+      ensRegistry: chainEnsRegistry
+    })
+  })
+}
 
 
 //
@@ -101,7 +132,7 @@ protocol.registerSchemesAsPrivileged([
 
 app.on('ready', async () => {
   // Enable web3://
-  await registerWeb3Protocol(web3ChainOverrides);
+  await registerWeb3Protocol(chainRpcOverrides, chainEnsOverrides);
 
   // Disable HTTP/HTTPS if not explicitely enabled
   // By default : web3:// only

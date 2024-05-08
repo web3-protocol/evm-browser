@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: 18
@@ -50,6 +51,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Install system dependencies
+        run: sudo apt-get install -y wine wine64 mono-devel
+
       - name: Install dependencies
         run: yarn install
 
@@ -76,7 +80,7 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Publish on arm
+      - name: Publish on universal
         run: yarn run publish -p darwin -a universal
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

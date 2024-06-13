@@ -49,7 +49,8 @@ EVM Browser support ``.eth`` ENS domains and ``.og`` Linagee domains.
 
 ## Current limitations
 
-Due to a bug in electron, web storage apis (localStorage, sessionStorage, webSQL, indexedDB, cookies) are disabled for now (see [progress in issue](https://github.com/nand2/evm-browser/issues/3))
+- web storage apis (localStorage, sessionStorage, webSQL, indexedDB, cookies) are disabled for now (see [progress in issue](https://github.com/nand2/evm-browser/issues/3)), due to a bug in electron.
+- Loading resources from blockchain with a chain id above 65536 (such as Sepolia) will fail. 
 
 ## Usage
 

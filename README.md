@@ -1,6 +1,6 @@
 # EVM Browser
 
-Web browser with support of the [ERC-6860 / ERC-4804 ``web3://`` protocol](https://docs.web3url.io/), which can show on-chain websites hosted on Ethereum and all others EVM chains. It includes support for the [Frame.sh](https://frame.sh/) wallet.
+Web browser with support of the [ERC-4804 / ERC-6860 ``web3://`` protocol](https://docs.web3url.io/), which can show on-chain websites hosted on Ethereum and all others EVM chains. It includes support for the [Frame.sh](https://frame.sh/) wallet.
 
 ![./screenshot2.png](./screenshot2.png)
 
@@ -16,25 +16,21 @@ In the above example, clicking on a terraform will load a dynamic page, for exam
 
 More examples : 
 
-``web3://0xA66556f4DB239E713491859258E577f25510eFd6:5/``
+``web3://0x4E1f41613c9084FdB9E34E11fAE9412427480e56/tokenHTML/9352``
 
-Load a on-chain website on goerli (``:5`` is the chain id of goerli).
+Call the ``tokenHTML`` method of ``0x4E1f41613c9084FdB9E34E11fAE9412427480e56``, and gives the uint 9352 as an argument.
 
-``web3://0x5a985f13345e820aa9618826b85f74c3986e1463:5/tokenHTML/2``
+``web3://0x4E1f41613c9084FdB9E34E11fAE9412427480e56/tokenSVG/9352?mime.type=svg``
 
-Call the ``tokenHTML`` method of ``0x5a985f13345e820aa9618826b85f74c3986e1463`` on goerli, and gives the uint 2 as an argument.
+Call the ``tokenSVG`` method of ``0x5a985f13345e820aa9618826b85f74c3986e1463``, gives the uint 9352 as an argument, and return the result as ``image/svg+xml``. 
 
-``web3://0x5a985f13345e820aa9618826b85f74c3986e1463:5/tokenSVG/2?mime.type=svg``
-
-Call the ``tokenSVG`` method of ``0x5a985f13345e820aa9618826b85f74c3986e1463`` on goerli, gives the uint 2 as an argument, and return the result as ``image/svg+xml``. 
-
-``web3://0x76010876050387FA66E28a1883aD73d576D88Bf2:5/levelAndTile/2/50?returns=(uint256,uint256)``
+``web3://0xA5aFC9fE76a28fB12C60954Ed6e2e5f8ceF64Ff2/levelAndTile/2/50?returns=(uint256,uint256)``
 
 Returns 2 numbers from this contract method, whose arguments are 2 and 50. The output will be casted as JSON : ``["0x1","0x24"]``
 
-``web3://0x1f9840a85d5af5bf1d1762f925bdaddc4201f984/balanceOf/obok.eth?returns=(uint256)``
+``web3://usdc.eth/balanceOf/vitalik.eth?returns=(uint256)``
 
-Call the ``balanceOf`` method of ``0x1f9840a85d5af5bf1d1762f925bdaddc4201f984`` with ``obok.eth`` resolved to this address as an argument.
+Call the ``balanceOf`` method of ``usdc.eth`` with ``vitalik.eth`` resolved to this address as an argument.
 
 See the [ ``web3://`` protocol documentation](https://docs.web3url.io/) for more infos.
 
@@ -53,7 +49,8 @@ EVM Browser support ``.eth`` ENS domains and ``.og`` Linagee domains.
 
 ## Current limitations
 
-Due to a bug in electron, web storage apis (localStorage, sessionStorage, webSQL, indexedDB, cookies) are disabled for now (see [progress in issue](https://github.com/nand2/evm-browser/issues/3))
+- web storage apis (localStorage, sessionStorage, webSQL, indexedDB, cookies) are disabled for now (see [progress in issue](https://github.com/nand2/evm-browser/issues/3)), due to a bug in electron.
+- Loading resources from blockchain with a chain id above 65536 (such as Sepolia) will fail. 
 
 ## Usage
 

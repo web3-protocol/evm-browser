@@ -111,8 +111,16 @@ function createWindow() {
     winOptions: {
       autoHideMenuBar: args.debug == false,
     },
-    viewReferences: {
+    viewWebPreferences: {
+      sandbox: true,
       preload: `${__dirname}/eth-provider-preload.js`,
+      // We need preload script working on iframes, but options are a bit not clear
+      // nodeIntegrationInSubFrames activates preload but seems to implies nodeIntegration, but
+      // in fact does not if sandbox=true (cf https://github.com/electron/electron/security/advisories/GHSA-mq8j-3h7h-p8g7 )
+      // So, with the mix contextIsolation=true (default) and sandbox=true, preload script will only have 
+      // a polyfilled subset of Node.js APIs available used for IPC with main process 
+      // (cf https://www.electronjs.org/docs/latest/tutorial/sandbox#sandbox-behavior-in-electron)
+      nodeIntegrationInSubFrames: true,
     }
   });
 

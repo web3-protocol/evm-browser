@@ -40,7 +40,7 @@ log.transports.console.level = false;
  * @param {number} [options.height = 800] - browser window's height
  * @param {string} options.controlPanel - control interface path to load
  * @param {number} [options.controlHeight = 130] - control interface's height
- * @param {object} [options.viewReferences] - webReferences for every BrowserView
+ * @param {object} [options.viewWebPreferences] - webReferences for every BrowserView
  * @param {object} [options.controlReferences] - webReferences for control panel BrowserView
  * @param {object} [options.winOptions] - options for BrowserWindow
  * @param {string} [options.startPage = ''] - start page to load on browser open
@@ -384,17 +384,14 @@ class BrowserLikeWindow extends EventEmitter {
    *
    * @param {string} [url=this.options.blankPage]
    * @param {number} [appendTo] - add next to specified tab's id
-   * @param {object} [references=this.options.viewReferences] - custom webPreferences to this tab
+   * @param {object} [references=this.options.viewWebPreferences] - custom webPreferences to this tab
    *
    * @fires BrowserLikeWindow#new-tab
    */
   newTab(url, appendTo) {
     const view = new BrowserView({
       webPreferences: {
-        // Set sandbox to support window.opener
-        // See: https://github.com/electron/electron/issues/1865#issuecomment-249989894
-        sandbox: true,
-        ...(this.options.viewReferences)
+        ...(this.options.viewWebPreferences)
       }
     });
 
